@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
+# Kovira Immersive
 
-## Project info
+Welcome to **Kovira Immersive**, a cutting-edge web application built to deliver a stunning and interactive user experience. This project leverages the power of modern web technologies to create a performant, responsive, and visually appealing interface, featuring immersive 3D elements and smooth animations.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Features
 
-## How can I edit this code?
+-   **Immersive Hero Section**: captivating first impression with 3D/interactive elements.
+-   **Responsive Design**: Fully optimized for all devices, from desktops to mobile phones.
+-   **Modern UI/UX**: Built with a sleek design system using **shadcn-ui** and **Tailwind CSS**.
+-   **Smooth Animations**: Enhanced user engagement with **Framer Motion**.
+-   **3D Graphics**: Integrated 3D experiences using **React Three Fiber**.
+-   **Form Handling**: Robust form validation and management.
+-   **Performance Optimized**: Fast loading times and optimized assets powered by **Vite**.
 
-There are several ways of editing your application.
+## 🛠️ Technology Stack
 
-**Use Lovable**
+This project is built using the following technologies:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+-   **Frontend Framework**: [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
+-   **Build Tool**: [Vite](https://vitejs.dev/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **UI Components**: [shadcn-ui](https://ui.shadcn.com/)
+-   **Animations**: [Framer Motion](https://www.framer.com/motion/)
+-   **3D Rendering**: [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) & [Drei](https://github.com/pmndrs/drei)
+-   **State Management & Data Fetching**: [TanStack Query](https://tanstack.com/query/latest)
+-   **Routing**: [React Router](https://reactrouter.com/)
+-   **Form Management**: [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
+-   **Testing**: [Vitest](https://vitest.dev/) & [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📋 Prerequisites
 
-**Use your preferred IDE**
+Before you begin, ensure you have the following installed on your machine:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+-   **Node.js** (v18.0.0 or higher)
+-   **npm** (or yarn/pnpm/bun)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🏁 Getting Started
 
-Follow these steps:
+Follow these steps to set up the project locally:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository**
+    ```bash
+    git clone <YOUR_REPOSITORY_URL>
+    cd kovira-immersive
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2.  **Install dependencies**
+    ```bash
+    npm install
+    # or
+    yarn install
+    # or
+    bun install
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3.  **Start the development server**
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    # or
+    bun dev
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+    The application will be available at `http://localhost:8080` (or the port shown in your terminal).
+
+## 📜 Available Scripts
+
+In the project directory, you can run:
+
+-   `npm run dev`: Runs the app in development mode.
+-   `npm run build`: Builds the app for production to the `dist` folder.
+-   `npm run preview`: Locally preview the production build.
+-   `npm run lint`: Lints the codebase using ESLint.
+-   `npm run test`: Runs the test suite using Vitest.
+
+## 📂 Project Structure
+
+```
+kovira-immersive/
+├── public/              # Static assets
+├── src/
+│   ├── components/      # Reusable UI components (Hero, Navbar, etc.)
+│   ├── hooks/           # Custom React hooks
+│   ├── lib/             # Utility functions and libraries
+│   ├── pages/           # Application pages (Index, NotFound)
+│   ├── App.tsx          # Main application component with routing
+│   └── main.tsx         # Entry point
+├── .eslintrc.js         # ESLint configuration
+├── tailwind.config.ts   # Tailwind CSS configuration
+├── tsconfig.json        # TypeScript configuration
+└── vite.config.ts       # Vite configuration
 ```
 
-**Edit a file directly in GitHub**
+## 🤝 Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Contributions are welcome! If you'd like to contribute, please follow these steps:
 
-**Use GitHub Codespaces**
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/YourFeature`).
+3.  Commit your changes (`git commit -m 'Add some feature'`).
+4.  Push to the branch (`git push origin feature/YourFeature`).
+5.  Open a Pull Request.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📄 License
 
-## What technologies are used for this project?
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Built with ❤️ by the Kovira Team.
