@@ -13,9 +13,8 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div>
-            <div className="font-display text-xl font-bold mb-4">
-              <span className="text-gradient">KOVIRA</span>
-              <span className="text-foreground/70 font-light ml-1">Technologies</span>
+            <div className="flex items-center gap-2 mb-4">
+              <img src="/logo.png" alt="Kovira Technologies" className="h-40 w-auto object-contain" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
               Engineering the future of technology with scalable, secure, and innovative digital solutions.

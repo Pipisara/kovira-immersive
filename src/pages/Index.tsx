@@ -19,15 +19,19 @@ const Index = () => {
       </Suspense>
 
       {/* All content sits above the fixed canvas */}
-      <div className="relative z-10">
-        <Navbar />
+      <div className="relative z-10 pointer-events-none">
+        <div className="pointer-events-auto">
+          <Navbar />
+        </div>
         <Hero />
-        <About />
-        <Services />
-        <WhyChooseUs />
-        <Testimonials />
-        <Contact />
-        <Footer />
+        <div className="pointer-events-auto">
+          <About />
+          <Services />
+          <WhyChooseUs />
+          <Testimonials />
+          <Contact />
+          <Footer />
+        </div>
       </div>
     </div>
   );

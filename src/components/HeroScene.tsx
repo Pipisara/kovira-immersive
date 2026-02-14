@@ -64,18 +64,32 @@ function FloatingShape({ position, scale, color, speed = 1, distort = 0.3, react
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.elapsedTime * 0.15 * speed;
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2 * speed;
+      // Rotation based on time and mouse position
+      const timeRotationX = state.clock.elapsedTime * 0.15 * speed;
+      const timeRotationY = state.clock.elapsedTime * 0.2 * speed;
 
-      const targetX = basePos.x + mouse.current.x * reactivity;
-      const targetY = basePos.y + mouse.current.y * reactivity;
-      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.05);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.05);
+      const mouseRotationX = mouse.current.y * 0.2 * reactivity;
+      const mouseRotationY = mouse.current.x * 0.2 * reactivity;
+
+      // Smooth rotation (slower response with 0.05 factor)
+      const targetRotX = timeRotationX + mouseRotationX;
+      const targetRotY = timeRotationY + mouseRotationY;
+
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, targetRotX, 0.05);
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, targetRotY, 0.05);
+
+      // Position based on mouse position
+      const targetX = basePos.x + mouse.current.x * reactivity * 1.5;
+      const targetY = basePos.y + mouse.current.y * reactivity * 1.5;
+
+      // Smooth position (slower response with 0.04 factor)
+      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.04);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.04);
     }
   });
 
   return (
-    <Float speed={speed * 1.5} rotationIntensity={0.4} floatIntensity={1.5}>
+    <Float speed={speed * 1.5} rotationIntensity={0.5} floatIntensity={1.5}>
       <mesh ref={meshRef} position={position} scale={scale}>
         <icosahedronGeometry args={[1, 1]} />
         <MeshDistortMaterial
@@ -108,8 +122,11 @@ function ParticleField() {
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.02 + state.pointer.x * 0.15;
-      ref.current.rotation.x = state.clock.elapsedTime * 0.01 + state.pointer.y * 0.1;
+      const targetRotY = state.clock.elapsedTime * 0.02 + state.pointer.x * 0.15;
+      const targetRotX = state.clock.elapsedTime * 0.01 + state.pointer.y * 0.1;
+
+      ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, targetRotY, 0.05);
+      ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, targetRotX, 0.05);
     }
   });
 
@@ -133,9 +150,13 @@ function WireframeSphere() {
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.05 + state.pointer.x * 0.3;
-      ref.current.rotation.x = state.pointer.y * 0.2;
-      ref.current.rotation.z = state.clock.elapsedTime * 0.03;
+      const targetRotY = state.clock.elapsedTime * 0.05 + state.pointer.x * 0.3;
+      const targetRotX = state.pointer.y * 0.2;
+      const targetRotZ = state.clock.elapsedTime * 0.03;
+
+      ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, targetRotY, 0.05);
+      ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, targetRotX, 0.05);
+      ref.current.rotation.z = THREE.MathUtils.lerp(ref.current.rotation.z, targetRotZ, 0.05);
     }
   });
 
@@ -152,8 +173,11 @@ function CursorLight() {
 
   useFrame((state) => {
     if (lightRef.current) {
-      lightRef.current.position.x = state.pointer.x * 5;
-      lightRef.current.position.y = state.pointer.y * 5;
+      const targetX = state.pointer.x * 5;
+      const targetY = state.pointer.y * 5;
+
+      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, targetX, 0.1);
+      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, targetY, 0.1);
       lightRef.current.position.z = 3;
     }
   });
