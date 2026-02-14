@@ -1,21 +1,43 @@
 import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial } from "@react-three/drei";
 import * as THREE from "three";
 
-function FloatingShape({ position, scale, color, speed = 1, distort = 0.3 }: {
+// Shared mouse tracker
+function useMousePosition() {
+  const mouse = useRef(new THREE.Vector2(0, 0));
+  const { viewport } = useThree();
+
+  useFrame((state) => {
+    mouse.current.x = state.pointer.x * viewport.width * 0.5;
+    mouse.current.y = state.pointer.y * viewport.height * 0.5;
+  });
+
+  return mouse;
+}
+
+function FloatingShape({ position, scale, color, speed = 1, distort = 0.3, reactivity = 0.3 }: {
   position: [number, number, number];
   scale: number;
   color: string;
   speed?: number;
   distort?: number;
+  reactivity?: number;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const mouse = useMousePosition();
+  const basePos = useMemo(() => new THREE.Vector3(...position), [position]);
 
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.x = state.clock.elapsedTime * 0.15 * speed;
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.2 * speed;
+
+      // React to cursor — lerp toward mouse offset
+      const targetX = basePos.x + mouse.current.x * reactivity;
+      const targetY = basePos.y + mouse.current.y * reactivity;
+      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.05);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.05);
     }
   });
 
@@ -53,8 +75,8 @@ function ParticleField() {
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.02;
-      ref.current.rotation.x = state.clock.elapsedTime * 0.01;
+      ref.current.rotation.y = state.clock.elapsedTime * 0.02 + state.pointer.x * 0.15;
+      ref.current.rotation.x = state.clock.elapsedTime * 0.01 + state.pointer.y * 0.1;
     }
   });
 
@@ -78,7 +100,8 @@ function WireframeSphere() {
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.05;
+      ref.current.rotation.y = state.clock.elapsedTime * 0.05 + state.pointer.x * 0.3;
+      ref.current.rotation.x = state.pointer.y * 0.2;
       ref.current.rotation.z = state.clock.elapsedTime * 0.03;
     }
   });
@@ -89,6 +112,20 @@ function WireframeSphere() {
       <meshBasicMaterial color="#00d4ff" wireframe transparent opacity={0.08} />
     </mesh>
   );
+}
+
+function CursorLight() {
+  const lightRef = useRef<THREE.PointLight>(null);
+
+  useFrame((state) => {
+    if (lightRef.current) {
+      lightRef.current.position.x = state.pointer.x * 5;
+      lightRef.current.position.y = state.pointer.y * 5;
+      lightRef.current.position.z = 3;
+    }
+  });
+
+  return <pointLight ref={lightRef} intensity={0.4} color="#00d4ff" distance={12} />;
 }
 
 export default function HeroScene() {
@@ -102,14 +139,15 @@ export default function HeroScene() {
       <ambientLight intensity={0.3} />
       <directionalLight position={[5, 5, 5]} intensity={0.5} color="#00d4ff" />
       <pointLight position={[-5, -5, -5]} intensity={0.3} color="#26b89f" />
+      <CursorLight />
 
       <WireframeSphere />
       <ParticleField />
 
-      <FloatingShape position={[-3, 1.5, 0]} scale={0.6} color="#00d4ff" speed={0.8} distort={0.4} />
-      <FloatingShape position={[3.5, -1, 1]} scale={0.45} color="#26b89f" speed={1.2} distort={0.3} />
-      <FloatingShape position={[-1.5, -2, 2]} scale={0.35} color="#00d4ff" speed={0.6} distort={0.5} />
-      <FloatingShape position={[2, 2.5, -1]} scale={0.5} color="#26b89f" speed={1} distort={0.2} />
+      <FloatingShape position={[-3, 1.5, 0]} scale={0.6} color="#00d4ff" speed={0.8} distort={0.4} reactivity={0.4} />
+      <FloatingShape position={[3.5, -1, 1]} scale={0.45} color="#26b89f" speed={1.2} distort={0.3} reactivity={0.25} />
+      <FloatingShape position={[-1.5, -2, 2]} scale={0.35} color="#00d4ff" speed={0.6} distort={0.5} reactivity={0.35} />
+      <FloatingShape position={[2, 2.5, -1]} scale={0.5} color="#26b89f" speed={1} distort={0.2} reactivity={0.3} />
     </Canvas>
   );
 }
