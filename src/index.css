@@ -57,6 +57,21 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    cursor: none;
+    /* Hide default cursor if not handled by JS */
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
   }
 
   h1,
