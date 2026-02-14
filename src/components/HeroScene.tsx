@@ -1,7 +1,41 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial } from "@react-three/drei";
 import * as THREE from "three";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Scroll-driven camera movement
+function ScrollCamera() {
+  const { camera } = useThree();
+  const scrollProgress = useRef(0);
+
+  useEffect(() => {
+    const trigger = ScrollTrigger.create({
+      trigger: document.body,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+      onUpdate: (self) => {
+        scrollProgress.current = self.progress;
+      },
+    });
+    return () => trigger.kill();
+  }, []);
+
+  useFrame(() => {
+    const p = scrollProgress.current;
+    // Slowly orbit camera as user scrolls
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, Math.sin(p * Math.PI * 2) * 2, 0.05);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, Math.cos(p * Math.PI) * 1.5, 0.05);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, 6 + p * 2, 0.05);
+    camera.lookAt(0, 0, 0);
+  });
+
+  return null;
+}
 
 // Shared mouse tracker
 function useMousePosition() {
@@ -33,7 +67,6 @@ function FloatingShape({ position, scale, color, speed = 1, distort = 0.3, react
       meshRef.current.rotation.x = state.clock.elapsedTime * 0.15 * speed;
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.2 * speed;
 
-      // React to cursor — lerp toward mouse offset
       const targetX = basePos.x + mouse.current.x * reactivity;
       const targetY = basePos.y + mouse.current.y * reactivity;
       meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.05);
@@ -132,10 +165,11 @@ export default function HeroScene() {
   return (
     <Canvas
       camera={{ position: [0, 0, 6], fov: 60 }}
-      style={{ position: "absolute", inset: 0 }}
+      style={{ position: "fixed", inset: 0, zIndex: 0 }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: true }}
     >
+      <ScrollCamera />
       <ambientLight intensity={0.3} />
       <directionalLight position={[5, 5, 5]} intensity={0.5} color="#00d4ff" />
       <pointLight position={[-5, -5, -5]} intensity={0.3} color="#26b89f" />

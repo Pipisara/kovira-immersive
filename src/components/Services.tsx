@@ -1,101 +1,162 @@
-import { motion } from "framer-motion";
-import {
-  Monitor, Cpu, Globe, Cloud, Shield, Database, Code, Settings
-} from "lucide-react";
+import { useRef, useEffect } from "react";
+import { motion, useInView } from "framer-motion";
+import { Monitor, Cpu, Globe, Cloud, Shield, Database, Code, Settings } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const services = [
   {
     icon: Monitor,
     title: "POS Systems",
-    description: "Custom point-of-sale solutions with real-time analytics, inventory sync, and multi-location management.",
+    desc: "Enterprise-grade point-of-sale solutions with real-time analytics, inventory management, and seamless payment integration for retail and hospitality.",
   },
   {
     icon: Cpu,
     title: "Business Automation",
-    description: "Streamline workflows with intelligent automation that reduces overhead and accelerates operations.",
+    desc: "Streamline operations with intelligent workflow automation, reducing manual overhead by up to 70% through custom-built process engines.",
   },
   {
     icon: Globe,
-    title: "Networking & Infrastructure",
-    description: "Enterprise-grade network design, deployment, and management for seamless connectivity.",
-  },
-  {
-    icon: Code,
-    title: "Web & App Development",
-    description: "High-performance web applications and native mobile experiences built with modern frameworks.",
+    title: "Networking Solutions",
+    desc: "Scalable network architecture design, SD-WAN deployment, and 24/7 monitoring for enterprise-grade connectivity and uptime.",
   },
   {
     icon: Cloud,
-    title: "Cloud & Managed Services",
-    description: "Scalable cloud hosting, migration, and 24/7 managed services to keep your business running.",
+    title: "Cloud Hosting",
+    desc: "Managed cloud infrastructure on AWS, Azure, and GCP with auto-scaling, disaster recovery, and 99.99% SLA guarantees.",
   },
   {
     icon: Shield,
     title: "Cybersecurity",
-    description: "Comprehensive threat protection, compliance auditing, and security-first architecture.",
+    desc: "Comprehensive threat protection with penetration testing, SOC monitoring, zero-trust architecture, and regulatory compliance frameworks.",
+  },
+  {
+    icon: Code,
+    title: "Web Development",
+    desc: "High-performance web applications and progressive web apps built with modern frameworks, optimized for speed and conversion.",
   },
   {
     icon: Database,
-    title: "ERP & Inventory",
-    description: "End-to-end enterprise resource planning with real-time inventory tracking and reporting.",
+    title: "ERP Systems",
+    desc: "Custom ERP implementations that unify finance, HR, supply chain, and operations into a single intelligent platform.",
   },
   {
     icon: Settings,
-    title: "API Integrations",
-    description: "Seamless connections between your tools and platforms with custom API development.",
+    title: "IT Consulting",
+    desc: "Strategic technology advisory services including digital roadmaps, vendor selection, architecture reviews, and CTO-as-a-Service.",
   },
 ];
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.08, ease: "easeOut" },
-  }),
-};
-
 export default function Services() {
-  return (
-    <section id="services" className="section-padding">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-16"
-        >
-          <p className="text-primary text-sm font-medium tracking-widest uppercase mb-3">What We Do</p>
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Comprehensive <span className="text-gradient">Solutions</span>
-          </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            We deliver end-to-end technology services tailored to your business needs.
-          </p>
-        </motion.div>
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {services.map((service, i) => (
-            <motion.div
-              key={service.title}
-              custom={i}
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              whileHover={{ y: -8, transition: { duration: 0.25 } }}
-              className="group glass rounded-xl p-6 hover:border-primary/40 transition-colors duration-300 cursor-default"
-            >
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:glow-primary transition-shadow duration-300">
-                <service.icon className="text-primary" size={22} />
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">{service.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
-            </motion.div>
-          ))}
+  useEffect(() => {
+    const container = containerRef.current;
+    const track = trackRef.current;
+    if (!container || !track) return;
+
+    const totalScroll = track.scrollWidth - window.innerWidth;
+
+    const ctx = gsap.context(() => {
+      gsap.to(track, {
+        x: -totalScroll,
+        ease: "none",
+        scrollTrigger: {
+          trigger: container,
+          start: "top top",
+          end: () => `+=${totalScroll}`,
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="services" ref={containerRef} className="relative overflow-hidden">
+      <div
+        ref={trackRef}
+        className="flex items-center min-h-screen gap-8 px-20 will-change-transform"
+      >
+        {/* Title block */}
+        <div className="flex-shrink-0 w-[400px]">
+          <p className="text-primary text-sm font-medium tracking-widest uppercase mb-3">
+            What We Do
+          </p>
+          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+            Our <span className="text-gradient">Services</span>
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            End-to-end technology solutions engineered for growth.
+          </p>
         </div>
+
+        {/* Cards */}
+        {services.map((service, i) => (
+          <ServiceCard key={service.title} service={service} index={i} />
+        ))}
       </div>
     </section>
+  );
+}
+
+function ServiceCard({
+  service,
+  index,
+}: {
+  service: (typeof services)[0];
+  index: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    cardRef.current.style.transform = `perspective(800px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.02)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform =
+      "perspective(800px) rotateY(0) rotateX(0) scale(1)";
+  };
+
+  const Icon = service.icon;
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      className="flex-shrink-0 w-[350px]"
+    >
+      <div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="glass rounded-2xl p-8 h-[400px] flex flex-col transition-all duration-200 hover:border-primary/40 hover:glow-primary cursor-default"
+      >
+        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+          <Icon className="w-7 h-7 text-primary" />
+        </div>
+        <h3 className="font-display text-xl font-semibold mb-4 text-foreground">
+          {service.title}
+        </h3>
+        <p className="text-muted-foreground text-sm leading-relaxed flex-1">
+          {service.desc}
+        </p>
+      </div>
+    </motion.div>
   );
 }
