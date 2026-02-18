@@ -1,14 +1,16 @@
 import { lazy, Suspense } from "react";
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import About from "../components/About";
-import Services from "../components/Services";
-import WhyChooseUs from "../components/WhyChooseUs";
-import Testimonials from "../components/Testimonials";
-import Contact from "../components/Contact";
-import Footer from "../components/Footer";
+import Navbar from "../components/sections/Navbar";
+import Hero from "../components/sections/Hero";
+import About from "../components/sections/About";
+import Services from "../components/sections/Services";
+import WhyChooseUs from "../components/sections/WhyChooseUs";
+import Testimonials from "../components/sections/Testimonials";
+import Contact from "../components/sections/Contact";
+import Footer from "../components/sections/Footer";
+import LiveExperience from "../components/sections/LiveExperience";
 
-const HeroScene = lazy(() => import("../components/HeroScene"));
+// HeroScene is still lazy — it's a heavy WebGL canvas only needed for visuals
+const HeroScene = lazy(() => import("../components/sections/HeroScene"));
 
 const Index = () => {
   return (
@@ -19,19 +21,16 @@ const Index = () => {
       </Suspense>
 
       {/* All content sits above the fixed canvas */}
-      <div className="relative z-10 pointer-events-none">
-        <div className="pointer-events-auto">
-          <Navbar />
-        </div>
+      <div className="relative z-10">
+        <Navbar />
         <Hero />
-        <div className="pointer-events-auto">
-          <About />
-          <Services />
-          <WhyChooseUs />
-          <Testimonials />
-          <Contact />
-          <Footer />
-        </div>
+        <LiveExperience />
+        <About />
+        <Services />
+        <WhyChooseUs />
+        <Testimonials />
+        <Contact />
+        <Footer />
       </div>
     </div>
   );
