@@ -5,13 +5,17 @@ Welcome to **Kovira Immersive**, a cutting-edge web application built to deliver
 ## 🚀 Features
 
 -   **Immersive Hero Section**: A captivating first impression with a full-page 3D WebGL background rendered using **React Three Fiber**.
--   **Live Experience Section**: Interactive mini-demos of real-world systems (POS, Dashboard, Sample Website) that visitors can try directly on the landing page — no sign-up required.
+-   **Live Experience Platform**: A comprehensive, category-based interactive demo lab featuring:
+    -   **Business Systems**: POS, ERP, and Automation workflows.
+    -   **Infrastructure**: Visualization of Networks, Security Threats, and Cloud Architectures.
+    -   **Marketing**: Campaign Dashboards, SEO panels, and Funnel visualization.
+    -   **Web Solutions**: Interactive samples of Restaurant, Ecommerce, and Booking sites.
 -   **Responsive Design**: Fully optimized for all devices, from desktops to mobile phones.
 -   **Modern UI/UX**: Built with a sleek design system using **shadcn/ui** and **Tailwind CSS**.
 -   **Smooth Animations**: Enhanced user engagement with **GSAP** (GreenSock Animation Platform) and **Framer Motion**.
 -   **3D Graphics**: Integrated 3D experiences enabling high-performance WebGL rendering.
 -   **Interactive Forms**: Robust contact form with validation using **React Hook Form** and **Zod**.
--   **Performance Optimized**: Fast loading times and optimized assets powered by **Vite**, with lazy-loading for heavy WebGL components.
+-   **Performance Optimized**: Fast loading times and optimized assets powered by **Vite**, with code-splitting and lazy-loading for all interactive demos.
 
 ## 🛠️ Technology Stack
 
@@ -55,23 +59,31 @@ kovira-immersive/
 │   │   │   ├── Footer.tsx          # Site footer
 │   │   │   ├── Hero.tsx            # Hero section overlay content
 │   │   │   ├── HeroScene.tsx       # Full-page fixed 3D WebGL background (lazy-loaded)
-│   │   │   ├── LiveExperience.tsx  # Interactive live demo section (POS, Dashboard, Website)
+│   │   │   ├── LiveExperience.tsx  # Main container for the interactive demo platform
 │   │   │   ├── NavLink.tsx         # Individual navigation link component
 │   │   │   ├── Navbar.tsx          # Top navigation bar
 │   │   │   ├── Services.tsx        # "Services" listing section with scroll animation
 │   │   │   ├── Testimonials.tsx    # Client testimonials carousel
 │   │   │   └── WhyChooseUs.tsx     # "Why Choose Us" features grid
-│   │   └── demos/                  # Isolated interactive demo modules (used by LiveExperience)
-│   │       ├── dashboard/
-│   │       │   ├── DashboardDemo.tsx   # Analytics dashboard demo UI
-│   │       │   └── dashboard-data.ts   # Mock data for the dashboard demo
-│   │       ├── pos/
-│   │       │   ├── PosDemo.tsx         # POS system demo shell
-│   │       │   ├── PosProducts.tsx     # Product listing for POS demo
-│   │       │   ├── PosCheckout.tsx     # Checkout flow for POS demo
-│   │       │   └── pos-data.ts         # Mock data for the POS demo
-│   │       └── websites/
-│   │           └── SampleSiteDemo.tsx  # Sample website demo UI
+│   │   └── demos/                  # Interactive Demo Platform
+│   │       ├── liveExperienceConfig.ts  # DATA SOURCE: Config for categories, demos, and lazy loads
+│   │       ├── DemoShell.tsx       # Universal UI wrapper for all demos
+│   │       ├── business/           # Business Systems Demos
+│   │       │   ├── pos/            # Point of Sale (POS) Demo
+│   │       │   ├── erp/            # ERP & Inventory Demo
+│   │       │   └── automation/     # Workflow Automation Demo
+│   │       ├── infrastructure/     # IT Infrastructure Demos
+│   │       │   ├── network-visualizer/ # Network Topology Demo
+│   │       │   ├── security-monitor/   # Cybersecurity Threat Demo
+│   │       │   └── cloud-simulator/    # Cloud Deployment Demo
+│   │       ├── marketing/          # Digital Marketing Demos
+│   │       │   ├── campaign-dashboard/ # Ad Campaign Analytics Demo
+│   │       │   ├── seo-panel/          # SEO Performance Demo
+│   │       │   └── funnel/             # Lead Funnel Visualization Demo
+│   │       └── web/                # Web Development Demos
+│   │           ├── restaurant/     # Restaurant Booking Demo
+│   │           ├── ecommerce/      # Online Store Demo
+│   │           └── booking/        # Service Appointment Demo
 │   ├── hooks/                      # Custom React hooks
 │   │   ├── use-mobile.tsx          # Hook to detect mobile viewports
 │   │   └── use-toast.ts            # Hook for displaying toast notifications
@@ -140,10 +152,13 @@ In the project directory, you can run:
 The application is structured for easy updates. Here is where to look to change specific parts of the site:
 
 -   **Hero Text / 3D Background**: Modify `src/components/sections/Hero.tsx` for text and `src/components/sections/HeroScene.tsx` for the 3D WebGL elements.
--   **Live Experience Demos**: Each demo is self-contained in `src/components/demos/`. Update the relevant demo component or its `*-data.ts` file to change demo content.
-    -   POS System → `src/components/demos/pos/`
-    -   Analytics Dashboard → `src/components/demos/dashboard/`
-    -   Sample Website → `src/components/demos/websites/`
+-   **Live Experience Demos**:
+    1.  **Registry**: To add/remove demos or categories, edit `src/components/demos/liveExperienceConfig.ts`. This is the single source of truth.
+    2.  **Demo Components**: Each demo is in its own folder under `src/components/demos/`.
+        -   **Business**: `src/components/demos/business/`
+        -   **Infrastructure**: `src/components/demos/infrastructure/`
+        -   **Marketing**: `src/components/demos/marketing/`
+        -   **Web**: `src/components/demos/web/`
 -   **Service Offerings**: Update the data array or layout in `src/components/sections/Services.tsx`.
 -   **Testimonials**: Add or remove testimonials in `src/components/sections/Testimonials.tsx`.
 -   **About Section**: Edit `src/components/sections/About.tsx`.
