@@ -3,23 +3,39 @@ export interface Product {
     name: string;
     category: string;
     price: number;
-    emoji: string;
+    image: string;
 }
 
 export interface CartItem extends Product {
     quantity: number;
+    options?: string[];
+    course?: string; // e.g., 'Appetizer', 'Main Course', 'Dessert'
+}
+
+export interface Order {
+    id: string;
+    items: CartItem[];
+    subtotal: number;
+    discount: number;
+    serviceCharge: number;
+    tax: number;
+    total: number;
+    timestamp: Date;
+    orderType: string;
 }
 
 export const products: Product[] = [
-    { id: "p1", name: "Espresso", category: "Beverages", price: 3.5, emoji: "☕" },
-    { id: "p2", name: "Cappuccino", category: "Beverages", price: 4.5, emoji: "🍵" },
-    { id: "p3", name: "Latte", category: "Beverages", price: 5.0, emoji: "🥛" },
-    { id: "p4", name: "Croissant", category: "Food", price: 3.0, emoji: "🥐" },
-    { id: "p5", name: "Sandwich", category: "Food", price: 7.5, emoji: "🥪" },
-    { id: "p6", name: "Muffin", category: "Food", price: 2.5, emoji: "🧁" },
-    { id: "p7", name: "Cheesecake", category: "Food", price: 6.0, emoji: "🍰" },
-    { id: "p8", name: "Mineral Water", category: "Beverages", price: 2.0, emoji: "💧" },
+    { id: "p1", name: "Super Delicious Pizza", category: "Pizzas", price: 12.0, image: "🍕" },
+    { id: "p2", name: "Super Delicious Chicken", category: "Food", price: 15.0, image: "🍗" },
+    { id: "p3", name: "Super Delicious Burger", category: "Food", price: 10.0, image: "🍔" },
+    { id: "p4", name: "Super Delicious Chips", category: "Food", price: 5.0, image: "🍟" },
+    { id: "p5", name: "Salmon Steak", category: "Fish", price: 21.0, image: "🐟" },
+    { id: "p6", name: "Red Wine", category: "Wine", price: 8.0, image: "🍷" },
+    { id: "p7", name: "Cocktail", category: "Bar", price: 9.0, image: "🍸" },
+    { id: "p8", name: "Onion Soup", category: "Soup", price: 6.0, image: "🥣" },
 ];
 
 export const TAX_RATE = 0.08;
 export const DISCOUNT_RATE = 0.1;
+export const SERVICE_CHARGE = 0.05;
+

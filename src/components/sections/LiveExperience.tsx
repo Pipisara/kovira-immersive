@@ -144,6 +144,7 @@ export default function LiveExperience() {
     const [activeCategory, setActiveCategory] = useState<DemoCategory>(demoCategories[0]);
     const [activeDemo, setActiveDemo] = useState<SubDemo>(demoCategories[0].demos[0]);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [isMaximized, setIsMaximized] = useState(false);
 
     const sectionRef = useRef<HTMLElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-10% 0px -10% 0px" });
@@ -153,6 +154,16 @@ export default function LiveExperience() {
         const timer = setTimeout(() => ScrollTrigger.refresh(), 100);
         return () => clearTimeout(timer);
     }, []);
+
+    // Handle body scroll locking when maximized
+    useEffect(() => {
+        if (isMaximized) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => { document.body.style.overflow = "unset"; };
+    }, [isMaximized]);
 
     const handleCategoryChange = (cat: DemoCategory) => {
         if (cat.id === activeCategory.id) return;
@@ -263,7 +274,7 @@ export default function LiveExperience() {
                     </AnimatePresence>
 
                     {/* Demo shell */}
-                    <div className="h-[480px] md:h-[520px]">
+                    <div className="h-[480px] md:h-[520px] relative">
                         <AnimatePresence mode="wait">
                             {!isTransitioning && (
                                 <motion.div
@@ -277,12 +288,50 @@ export default function LiveExperience() {
                                     <DemoShell
                                         category={activeCategory}
                                         demo={activeDemo}
+                                        onMaximize={() => setIsMaximized(true)}
+                                        onMinimize={() => {
+                                            // Optional: scroll back to category top
+                                            sectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                        }}
+                                        onClose={() => {
+                                            // Optional: reset to first demo
+                                            setActiveDemo(activeCategory.demos[0]);
+                                        }}
                                     />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
                 </motion.div>
+
+                {/* ── Maximized Overlay (Mobile First) ────────────────── */}
+                <AnimatePresence>
+                    {isMaximized && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[1001] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 overflow-hidden touch-none"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="w-[96%] h-[90%] md:w-[90%] md:h-[85%] max-w-7xl flex flex-col min-h-0 relative shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] rounded-3xl overflow-hidden border border-white/20 bg-background"
+                            >
+                                <DemoShell
+                                    category={activeCategory}
+                                    demo={activeDemo}
+                                    isMaximized={true}
+                                    onMaximize={() => setIsMaximized(false)}
+                                    onMinimize={() => setIsMaximized(false)}
+                                    onClose={() => setIsMaximized(false)}
+                                />
+                            </motion.div>
+                        </motion.div>
+                    )
+                    }
+                </AnimatePresence >
 
                 {/* ── CTA ─────────────────────────────────────────────── */}
                 <motion.div
