@@ -60,19 +60,31 @@ export default function Services() {
 
     const totalScroll = track.scrollWidth - window.innerWidth;
 
+    const delayScroll = window.innerHeight; // Adjust this value to control the delay length
+
     const ctx = gsap.context(() => {
-      gsap.to(track, {
-        x: -totalScroll,
-        ease: "none",
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container,
           start: "top top",
-          end: () => `+=${totalScroll}`,
+          end: () => `+=${totalScroll + delayScroll * 2}`, // Double delay for start and end
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,
         },
       });
+
+      // Add delay at the start (scrolls without moving the content)
+      tl.to({}, { duration: delayScroll });
+
+      tl.to(track, {
+        x: -totalScroll,
+        ease: "none",
+        duration: totalScroll, // Use actual distance as duration for correct scrubbing ratio
+      });
+
+      // Add delay at the end (scrolls without moving the content)
+      tl.to({}, { duration: delayScroll });
     });
 
     return () => ctx.revert();
