@@ -1,56 +1,14 @@
-import { lazy, Suspense, useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { Monitor, BarChart3, Globe, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, Sparkles, ArrowLeft } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { demoCategories, DemoCategory, SubDemo } from "../demos/liveExperienceConfig";
+import DemoShell from "../demos/DemoShell";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PosDemo = lazy(() => import("../demos/pos/PosDemo"));
-const DashboardDemo = lazy(() => import("../demos/dashboard/DashboardDemo"));
-const SampleSiteDemo = lazy(() => import("../demos/websites/SampleSiteDemo"));
-
-type DemoId = "pos" | "dashboard" | "website";
-
-interface DemoOption {
-    id: DemoId;
-    icon: React.ElementType;
-    title: string;
-    subtitle: string;
-    description: string;
-    color: string;
-    accentBg: string;
-}
-
-const demos: DemoOption[] = [
-    {
-        id: "pos",
-        icon: Monitor,
-        title: "POS System",
-        subtitle: "Point of Sale",
-        description: "Add products, manage cart, apply discounts, and process checkout.",
-        color: "text-primary",
-        accentBg: "bg-primary/10 border-primary/30",
-    },
-    {
-        id: "dashboard",
-        icon: BarChart3,
-        title: "Business Dashboard",
-        subtitle: "Analytics & Reports",
-        description: "Live KPIs, sales charts, and order management at a glance.",
-        color: "text-accent",
-        accentBg: "bg-accent/10 border-accent/30",
-    },
-    {
-        id: "website",
-        icon: Globe,
-        title: "Sample Website",
-        subtitle: "Web Development",
-        description: "A fully interactive restaurant site with booking functionality.",
-        color: "text-purple-400",
-        accentBg: "bg-purple-500/10 border-purple-500/30",
-    },
-];
+// ─── Loading skeleton ──────────────────────────────────────────────────────────
 
 function DemoSkeleton() {
     return (
@@ -61,39 +19,155 @@ function DemoSkeleton() {
                     transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                     className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent"
                 />
-                <span className="text-xs text-muted-foreground">Loading demo...</span>
+                <span className="text-xs text-muted-foreground">Loading demo…</span>
             </div>
         </div>
     );
 }
 
+// ─── Category Card ─────────────────────────────────────────────────────────────
+
+function CategoryCard({
+    category,
+    isActive,
+    onClick,
+    index,
+    isInView,
+}: {
+    category: DemoCategory;
+    isActive: boolean;
+    onClick: () => void;
+    index: number;
+    isInView: boolean;
+}) {
+    const Icon = category.icon;
+    return (
+        <motion.button
+            initial={{ opacity: 0, y: 24 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.2 + index * 0.08 }}
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onClick}
+            className={`relative text-left p-5 rounded-2xl border transition-all duration-300 cursor-pointer group ${isActive
+                ? `${category.accentBg} shadow-lg`
+                : "glass hover:border-border/80"
+                }`}
+        >
+            {/* Active ring */}
+            {isActive && (
+                <motion.div
+                    layoutId="categoryActiveRing"
+                    className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/30"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+            )}
+
+            {/* Gradient overlay */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${category.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+
+            <div className="relative z-10">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors ${isActive ? category.accentBg : "bg-secondary"}`}>
+                    <Icon size={20} className={isActive ? category.accentColor : "text-muted-foreground"} />
+                </div>
+                <h3 className={`font-bold text-sm mb-0.5 transition-colors ${isActive ? "text-foreground" : "text-foreground/80"}`}>
+                    {category.title}
+                </h3>
+                <p className={`text-xs transition-colors ${isActive ? category.accentColor : "text-muted-foreground"}`}>
+                    {category.subtitle}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                    {category.demos.length} interactive demos
+                </p>
+            </div>
+
+            {/* Active pulse dot */}
+            {isActive && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary animate-pulse"
+                />
+            )}
+        </motion.button>
+    );
+}
+
+// ─── Sub Demo Pill ─────────────────────────────────────────────────────────────
+
+function SubDemoPill({
+    demo,
+    isActive,
+    onClick,
+    index,
+}: {
+    demo: SubDemo;
+    isActive: boolean;
+    onClick: () => void;
+    index: number;
+}) {
+    const Icon = demo.icon;
+    return (
+        <motion.button
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.06 }}
+            whileHover={{ x: 3 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onClick}
+            className={`flex items-center gap-3 w-full text-left p-3 rounded-xl border transition-all duration-200 cursor-pointer ${isActive
+                ? `${demo.accentBg} shadow-md`
+                : "glass hover:border-border/70"
+                }`}
+        >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isActive ? demo.accentBg : "bg-secondary"}`}>
+                <Icon size={15} className={isActive ? demo.accentColor : "text-muted-foreground"} />
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className={`text-xs font-semibold truncate transition-colors ${isActive ? "text-foreground" : "text-foreground/80"}`}>
+                    {demo.title}
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5 line-clamp-1">
+                    {demo.description}
+                </p>
+            </div>
+            {isActive && (
+                <ChevronRight size={13} className={`shrink-0 ${demo.accentColor}`} />
+            )}
+        </motion.button>
+    );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+
 export default function LiveExperience() {
-    const [activeDemo, setActiveDemo] = useState<DemoId>("pos");
+    const [activeCategory, setActiveCategory] = useState<DemoCategory>(demoCategories[0]);
+    const [activeDemo, setActiveDemo] = useState<SubDemo>(demoCategories[0].demos[0]);
     const [isTransitioning, setIsTransitioning] = useState(false);
+
     const sectionRef = useRef<HTMLElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-10% 0px -10% 0px" });
 
-    // After this section mounts, tell GSAP to recalculate all scroll trigger
-    // positions — this ensures Services (and any other pinned sections) use
-    // the correct page height that includes LiveExperience's content.
+    // Refresh GSAP scroll triggers after mount
     useEffect(() => {
-        // Small delay to let the browser finish layout
-        const timer = setTimeout(() => {
-            ScrollTrigger.refresh();
-        }, 100);
+        const timer = setTimeout(() => ScrollTrigger.refresh(), 100);
         return () => clearTimeout(timer);
     }, []);
 
-    const handleDemoChange = (id: DemoId) => {
-        if (id === activeDemo || isTransitioning) return;
-        setIsTransitioning(true);
-        setTimeout(() => {
-            setActiveDemo(id);
-            setIsTransitioning(false);
-        }, 200);
+    const handleCategoryChange = (cat: DemoCategory) => {
+        if (cat.id === activeCategory.id) return;
+        setActiveCategory(cat);
+        setActiveDemo(cat.demos[0]);
     };
 
-    const activeDemoOption = demos.find((d) => d.id === activeDemo)!;
+    const handleDemoChange = (demo: SubDemo) => {
+        if (demo.id === activeDemo.id || isTransitioning) return;
+        setIsTransitioning(true);
+        setTimeout(() => {
+            setActiveDemo(demo);
+            setIsTransitioning(false);
+        }, 180);
+    };
 
     return (
         <section
@@ -101,13 +175,15 @@ export default function LiveExperience() {
             ref={sectionRef}
             className="section-padding relative overflow-hidden"
         >
-            {/* Ambient glow background */}
+            {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-3xl" />
+                <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-accent/3 rounded-full blur-3xl" />
             </div>
 
-            <div className="max-w-6xl mx-auto relative z-10">
-                {/* Section header */}
+            <div className="max-w-7xl mx-auto relative z-10">
+
+                {/* ── Section header ──────────────────────────────────── */}
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -117,130 +193,108 @@ export default function LiveExperience() {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
                         <Sparkles size={13} className="text-primary" />
                         <span className="text-xs font-medium text-primary tracking-wider uppercase">
-                            Try It Live
+                            Demo Lab
                         </span>
                     </div>
                     <h2 className="text-3xl md:text-5xl font-bold mb-4">
                         Experience Our{" "}
-                        <span className="text-gradient">Systems Live</span>
+                        <span className="text-gradient">Solutions Live</span>
                     </h2>
                     <p className="text-muted-foreground max-w-xl mx-auto text-lg leading-relaxed">
-                        No sign-up needed. Interact with real demos of our solutions — right here, right now.
+                        No sign-up needed. Interact with real demos of our IT solutions — right here, right now.
                     </p>
                 </motion.div>
 
-                {/* Demo selector cards */}
+                {/* ── Level 1: Category Selector ──────────────────────── */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
                     transition={{ duration: 0.7, delay: 0.15 }}
-                    className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
+                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
                 >
-                    {demos.map((demo, i) => {
-                        const Icon = demo.icon;
-                        const isActive = activeDemo === demo.id;
-                        return (
-                            <motion.button
-                                key={demo.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                                transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
-                                whileHover={{ y: -3, scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleDemoChange(demo.id)}
-                                className={`relative text-left p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${isActive
-                                    ? `${demo.accentBg} shadow-lg`
-                                    : "glass hover:border-border/80"
-                                    }`}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeIndicator"
-                                        className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/30"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    />
-                                )}
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${isActive ? demo.accentBg : "bg-secondary"
-                                    }`}>
-                                    <Icon size={20} className={isActive ? demo.color : "text-muted-foreground"} />
-                                </div>
-                                <h3 className={`font-semibold text-sm mb-0.5 ${isActive ? "text-foreground" : "text-foreground/80"}`}>
-                                    {demo.title}
-                                </h3>
-                                <p className={`text-xs mb-2 ${isActive ? demo.color : "text-muted-foreground"}`}>
-                                    {demo.subtitle}
-                                </p>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
-                                    {demo.description}
-                                </p>
-                                {isActive && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary animate-pulse"
-                                    />
-                                )}
-                            </motion.button>
-                        );
-                    })}
+                    {demoCategories.map((cat, i) => (
+                        <CategoryCard
+                            key={cat.id}
+                            category={cat}
+                            isActive={activeCategory.id === cat.id}
+                            onClick={() => handleCategoryChange(cat)}
+                            index={i}
+                            isInView={isInView}
+                        />
+                    ))}
                 </motion.div>
 
-                {/* Demo viewport */}
+                {/* ── Level 2 + 3: Sub selector + Demo viewport ───────── */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
                     transition={{ duration: 0.7, delay: 0.3 }}
-                    className="relative"
+                    className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4"
                 >
-                    {/* Viewport header */}
-                    <div className="flex items-center justify-between px-4 py-3 glass rounded-t-2xl border-b border-border/30">
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full bg-green-400 animate-pulse`} />
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {activeDemoOption.title} — Interactive Demo
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-border/60" />
-                            <div className="w-2 h-2 rounded-full bg-border/60" />
-                            <div className="w-2 h-2 rounded-full bg-border/60" />
-                        </div>
-                    </div>
+                    {/* Sub demo selector */}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeCategory.id}
+                            initial={{ opacity: 0, x: -16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -16 }}
+                            transition={{ duration: 0.25 }}
+                            className="flex flex-col gap-2"
+                        >
+                            {/* Category label */}
+                            <div className="flex items-center gap-2 px-1 mb-1">
+                                <div className={`w-1 h-4 rounded-full ${activeCategory.accentBg.split(" ")[0].replace("/10", "")}`} />
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                                    {activeCategory.title}
+                                </span>
+                            </div>
 
-                    {/* Demo content area */}
-                    <div className="glass rounded-b-2xl border-t-0 p-4 md:p-6 h-[480px] md:h-[520px] overflow-hidden relative">
+                            {/* Sub demo pills */}
+                            {activeCategory.demos.map((demo, i) => (
+                                <SubDemoPill
+                                    key={demo.id}
+                                    demo={demo}
+                                    isActive={activeDemo.id === demo.id}
+                                    onClick={() => handleDemoChange(demo)}
+                                    index={i}
+                                />
+                            ))}
+                        </motion.div>
+                    </AnimatePresence>
+
+                    {/* Demo shell */}
+                    <div className="h-[480px] md:h-[520px]">
                         <AnimatePresence mode="wait">
                             {!isTransitioning && (
                                 <motion.div
-                                    key={activeDemo}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    transition={{ duration: 0.25 }}
+                                    key={`${activeCategory.id}-${activeDemo.id}`}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
                                     className="h-full"
                                 >
-                                    <Suspense fallback={<DemoSkeleton />}>
-                                        {activeDemo === "pos" && <PosDemo />}
-                                        {activeDemo === "dashboard" && <DashboardDemo />}
-                                        {activeDemo === "website" && <SampleSiteDemo />}
-                                    </Suspense>
+                                    <DemoShell
+                                        category={activeCategory}
+                                        demo={activeDemo}
+                                    />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
                 </motion.div>
 
-                {/* CTA */}
+                {/* ── CTA ─────────────────────────────────────────────── */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.7, delay: 0.45 }}
-                    className="mt-10 text-center"
+                    transition={{ duration: 0.7, delay: 0.5 }}
+                    className="mt-12 text-center"
                 >
                     <div className="inline-flex flex-col sm:flex-row items-center gap-4 glass rounded-2xl px-8 py-6">
                         <div className="text-left">
                             <p className="font-semibold text-foreground">
-                                Want this system for your business?
+                                Want this solution for your business?
                             </p>
                             <p className="text-sm text-muted-foreground mt-0.5">
                                 We'll build it tailored to your exact needs — in weeks, not months.

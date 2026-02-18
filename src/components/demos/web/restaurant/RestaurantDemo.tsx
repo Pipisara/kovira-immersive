@@ -13,7 +13,7 @@ const menuItems = [
 
 type BookingStep = "idle" | "form" | "success";
 
-export default function SampleSiteDemo() {
+export default function RestaurantDemo() {
     const [bookingStep, setBookingStep] = useState<BookingStep>("idle");
     const [formData, setFormData] = useState({ name: "", date: "", guests: "2" });
 
@@ -153,8 +153,8 @@ export default function SampleSiteDemo() {
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, guests: g })}
                                                         className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${formData.guests === g
-                                                                ? "bg-amber-500/20 border-amber-500/60 text-amber-400"
-                                                                : "border-border text-muted-foreground hover:border-amber-500/40"
+                                                            ? "bg-amber-500/20 border-amber-500/60 text-amber-400"
+                                                            : "border-border text-muted-foreground hover:border-amber-500/40"
                                                             }`}
                                                     >
                                                         {g}

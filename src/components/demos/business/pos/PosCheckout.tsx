@@ -120,8 +120,8 @@ export default function PosCheckout({
                 <button
                     onClick={onToggleDiscount}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-200 ${discountApplied
-                            ? "bg-green-500/20 border-green-500/50 text-green-400"
-                            : "border-border/50 text-muted-foreground hover:border-primary/50 hover:text-primary"
+                        ? "bg-green-500/20 border-green-500/50 text-green-400"
+                        : "border-border/50 text-muted-foreground hover:border-primary/50 hover:text-primary"
                         }`}
                 >
                     <Tag size={12} />
