@@ -8,6 +8,7 @@ import Testimonials from "../components/sections/Testimonials";
 import Contact from "../components/sections/Contact";
 import Footer from "../components/sections/Footer";
 import LiveExperience from "../components/sections/LiveExperience";
+import TechPartners from "../components/sections/TechPartners";
 
 // HeroScene is still lazy — it's a heavy WebGL canvas only needed for visuals
 const HeroScene = lazy(() => import("../components/sections/HeroScene"));
@@ -29,6 +30,7 @@ const Index = () => {
         <Services />
         <WhyChooseUs />
         <Testimonials />
+        <TechPartners />
         <Contact />
         <Footer />
       </div>

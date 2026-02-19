@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { ChevronRight, Sparkles, ArrowLeft } from "lucide-react";
 import gsap from "gsap";
@@ -145,6 +146,11 @@ export default function LiveExperience() {
     const [activeDemo, setActiveDemo] = useState<SubDemo>(demoCategories[0].demos[0]);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const sectionRef = useRef<HTMLElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-10% 0px -10% 0px" });
@@ -192,7 +198,7 @@ export default function LiveExperience() {
                 <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-accent/3 rounded-full blur-3xl" />
             </div>
 
-            <div className="max-w-7xl mx-auto relative z-10">
+            <div className="max-w-7xl mx-auto relative z-10 px-4">
 
                 {/* ── Section header ──────────────────────────────────── */}
                 <motion.div
@@ -274,7 +280,7 @@ export default function LiveExperience() {
                     </AnimatePresence>
 
                     {/* Demo shell */}
-                    <div className="h-[480px] md:h-[520px] relative">
+                    <div className="h-[480px] md:h-[520px] relative rounded-2xl border border-white/10 shadow-2xl overflow-hidden mr-1">
                         <AnimatePresence mode="wait">
                             {!isTransitioning && (
                                 <motion.div
@@ -305,33 +311,35 @@ export default function LiveExperience() {
                 </motion.div>
 
                 {/* ── Maximized Overlay (Mobile First) ────────────────── */}
-                <AnimatePresence>
-                    {isMaximized && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[1001] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 overflow-hidden touch-none"
-                        >
+                {mounted && createPortal(
+                    <AnimatePresence>
+                        {isMaximized && (
                             <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                exit={{ scale: 0.9, y: 20 }}
-                                className="w-[96%] h-[90%] md:w-[90%] md:h-[85%] max-w-7xl flex flex-col min-h-0 relative shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] rounded-3xl overflow-hidden border border-white/20 bg-background"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 overflow-hidden touch-none"
                             >
-                                <DemoShell
-                                    category={activeCategory}
-                                    demo={activeDemo}
-                                    isMaximized={true}
-                                    onMaximize={() => setIsMaximized(false)}
-                                    onMinimize={() => setIsMaximized(false)}
-                                    onClose={() => setIsMaximized(false)}
-                                />
+                                <motion.div
+                                    initial={{ scale: 0.9, y: 20 }}
+                                    animate={{ scale: 1, y: 0 }}
+                                    exit={{ scale: 0.9, y: 20 }}
+                                    className="w-[96%] h-[90%] md:w-[90%] md:h-[85%] max-w-7xl flex flex-col min-h-0 relative shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] rounded-3xl overflow-hidden border border-white/20 bg-background"
+                                >
+                                    <DemoShell
+                                        category={activeCategory}
+                                        demo={activeDemo}
+                                        isMaximized={true}
+                                        onMaximize={() => setIsMaximized(false)}
+                                        onMinimize={() => setIsMaximized(false)}
+                                        onClose={() => setIsMaximized(false)}
+                                    />
+                                </motion.div>
                             </motion.div>
-                        </motion.div>
-                    )
-                    }
-                </AnimatePresence >
+                        )}
+                    </AnimatePresence>,
+                    document.body
+                )}
 
                 {/* ── CTA ─────────────────────────────────────────────── */}
                 <motion.div
