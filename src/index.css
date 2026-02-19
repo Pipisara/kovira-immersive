@@ -57,8 +57,6 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
-    cursor: none;
-    /* Hide default cursor if not handled by JS */
   }
 
   html {
