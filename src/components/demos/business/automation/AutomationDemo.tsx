@@ -353,7 +353,7 @@ export default function AutomationDemo() {
             setNodes(prev => prev.map(n => n.id === 'ai-engine' ? { ...n, status: 'running' } : n));
             addLog("AI analyzing linguistic origins...", "info");
 
-            const response = await fetch("http://n8n.pipisara.me:5678/webhook/ai-name-intelligence", {
+            const response = await fetch("https://n8n.pipisara.me/webhook/ai-name-intelligence", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: nameToProcess })
