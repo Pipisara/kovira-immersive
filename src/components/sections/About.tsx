@@ -25,7 +25,7 @@ function AnimatedCounter({ target, suffix = "", label }: { target: number; suffi
 
     return (
         <div ref={ref} className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-gradient mb-2">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-2">
                 {count}{suffix}
             </div>
             <div className="text-muted-foreground text-sm">{label}</div>
@@ -45,7 +45,7 @@ export default function About() {
                     className="text-center mb-16"
                 >
                     <p className="text-primary text-sm font-medium tracking-widest uppercase mb-3">Who We Are</p>
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
                         Powering Digital <span className="text-gradient">Transformation</span>
                     </h2>
                     <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">

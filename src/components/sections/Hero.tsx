@@ -51,7 +51,7 @@ export default function Hero() {
                     </p>
                 </motion.div>
 
-                <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-tight mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
                     <AnimatedText text="Engineering the Future" />
                     <br />
                     <span className="text-gradient">

@@ -213,7 +213,7 @@ export default function LiveExperience() {
                             Demo Lab
                         </span>
                     </div>
-                    <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                    <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-4">
                         Experience Our{" "}
                         <span className="text-gradient">Solutions Live</span>
                     </h2>

@@ -102,17 +102,17 @@ export default function Services() {
         >
             <div
                 ref={trackRef}
-                className="flex items-center min-h-screen gap-8 px-20 will-change-transform"
+                className="flex items-center min-h-screen gap-8 px-6 md:px-20 will-change-transform"
             >
                 {/* Title block */}
-                <div className="flex-shrink-0 w-[400px]">
+                <div className="flex-shrink-0 w-[280px] sm:w-[400px]">
                     <p className="text-primary text-sm font-medium tracking-widest uppercase mb-3">
                         What We Do
                     </p>
-                    <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+                    <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold mb-4">
                         Our <span className="text-gradient">Services</span>
                     </h2>
-                    <p className="text-muted-foreground text-lg">
+                    <p className="text-muted-foreground text-base sm:text-lg">
                         End-to-end technology solutions engineered for growth.
                     </p>
                 </div>
@@ -159,7 +159,7 @@ function ServiceCard({
             initial={{ opacity: 0, y: 30 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className="flex-shrink-0 w-[350px]"
+            className="flex-shrink-0 w-[280px] sm:w-[350px]"
         >
             <div
                 ref={cardRef}

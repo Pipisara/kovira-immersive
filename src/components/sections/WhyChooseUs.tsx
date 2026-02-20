@@ -22,7 +22,7 @@ export default function WhyChooseUs() {
                     className="text-center mb-16"
                 >
                     <p className="text-primary text-sm font-medium tracking-widest uppercase mb-3">Why KOVIRA</p>
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
                         Built Different, <span className="text-gradient">Built Better</span>
                     </h2>
                 </motion.div>
