@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { demoCategories, DemoCategory, SubDemo } from "../demos/liveExperienceConfig";
 import DemoShell from "../demos/DemoShell";
+import { CustomLabModal } from "./CustomLabModal";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -135,6 +136,7 @@ export default function LiveExperience() {
     const [activeDemo, setActiveDemo] = useState<SubDemo>(demoCategories[0].demos[0]);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
+    const [isCustomLabOpen, setIsCustomLabOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -346,17 +348,90 @@ export default function LiveExperience() {
                             </div>
 
                             {/* Info Card */}
-                            <div className="hidden lg:block glass rounded-[2rem] p-4 border-white/5 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
-                                    <Sparkles size={30} className="text-primary" />
+                            <div className="glass rounded-[2rem] p-5 border-white/5 relative overflow-hidden group hover:border-primary/20 transition-colors shadow-xl">
+                                {/* Blueprint/Building Animation Background */}
+                                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                        <motion.path
+                                            d="M 10,10 L 90,10 L 90,90 L 10,90 Z"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1"
+                                            className="text-primary"
+                                            initial={{ pathLength: 0 }}
+                                            animate={{ pathLength: [0, 1, 1, 0] }}
+                                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                        />
+                                        <motion.path
+                                            d="M 0,20 L 100,20 M 0,40 L 100,40 M 0,60 L 100,60 M 0,80 L 100,80"
+                                            stroke="currentColor"
+                                            strokeWidth="0.5"
+                                            className="text-primary/30"
+                                            initial={{ pathLength: 0 }}
+                                            animate={{ pathLength: 1 }}
+                                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                        />
+                                        <motion.path
+                                            d="M 20,0 L 20,100 M 40,0 L 40,100 M 60,0 L 60,100 M 80,0 L 80,100"
+                                            stroke="currentColor"
+                                            strokeWidth="0.5"
+                                            className="text-primary/30"
+                                            initial={{ pathLength: 0 }}
+                                            animate={{ pathLength: 1 }}
+                                            transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
+                                        />
+                                    </svg>
+
+                                    {/* Floating building blocks */}
+                                    {[...Array(6)].map((_, i) => (
+                                        <motion.div
+                                            key={i}
+                                            className="absolute w-2 h-2 bg-primary/40 rounded-sm"
+                                            animate={{
+                                                y: [0, -40, 0],
+                                                x: [0, Math.random() * 20 - 10, 0],
+                                                rotate: [0, 90, 0],
+                                                opacity: [0, 0.8, 0]
+                                            }}
+                                            transition={{
+                                                duration: 3 + Math.random() * 2,
+                                                repeat: Infinity,
+                                                delay: i * 0.5,
+                                                ease: "easeInOut"
+                                            }}
+                                            style={{
+                                                left: `${15 + i * 15}%`,
+                                                bottom: "-10%"
+                                            }}
+                                        />
+                                    ))}
                                 </div>
-                                <h5 className="text-xs font-bold mb-1">Custom Lab?</h5>
-                                <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">
-                                    Build a tailored proof-of-concept for your specific use case.
-                                </p>
-                                <button className="text-[9px] font-bold uppercase tracking-widest text-primary flex items-center gap-2 hover:gap-3 transition-all">
-                                    Request Access <ChevronRight size={10} />
-                                </button>
+
+                                <div className="absolute -top-4 -right-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+                                <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-60 transition-all group-hover:scale-110 group-hover:rotate-12">
+                                    <Sparkles size={24} className="text-primary" />
+                                </div>
+                                <div className="relative z-10">
+                                    <h5 className="text-sm font-bold mb-1.5 flex items-center gap-2">
+                                        Custom Lab
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.6)]" />
+                                    </h5>
+                                    <p className="text-[11px] text-muted-foreground mb-4 leading-relaxed max-w-[200px]">
+                                        Build a tailored proof-of-concept for your specific use case.
+                                    </p>
+                                    <button
+                                        onClick={() => setIsCustomLabOpen(true)}
+                                        className="w-full py-2.5 px-4 bg-white/5 hover:bg-primary text-foreground hover:text-primary-foreground rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 group/btn border border-white/10 hover:border-primary shadow-sm overflow-hidden relative"
+                                    >
+                                        <span className="relative z-10">Request Access</span>
+                                        <ChevronRight size={12} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />
+                                        <motion.div
+                                            className="absolute inset-0 bg-primary opacity-0 group-hover/btn:opacity-100 transition-opacity"
+                                            whileHover={{ x: ["-100%", "100%"] }}
+                                            transition={{ duration: 0.5 }}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </motion.div>
 
@@ -486,6 +561,12 @@ export default function LiveExperience() {
                             </motion.a>
                         </div>
                     </motion.div>
+                    {/* ── Custom Lab Modal ────────────────── */}
+                    <CustomLabModal
+                        isOpen={isCustomLabOpen}
+                        onClose={() => setIsCustomLabOpen(false)}
+                    />
+
                 </div>
             </div>
         </section>
