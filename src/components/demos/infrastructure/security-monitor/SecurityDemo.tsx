@@ -49,13 +49,10 @@ const generateTrafficPoint = (i: number, isUnderAttack: boolean) => ({
     latency: isUnderAttack
         ? Math.floor(Math.random() * 100) + 50
         : Math.floor(Math.random() * 20) + 10,
+    availability: isUnderAttack
+        ? (Math.random() * (70 - 40) + 40).toFixed(1)
+        : (Math.random() * (99.9 - 98.0) + 98.0).toFixed(1),
 });
-
-const availabilityData = [
-    { name: "Available", value: 45 },
-    { name: "Down", value: 3 },
-    { name: "Maintenance", value: 2 },
-];
 
 const cpuGroups = [
     { group: "Server > Windows", value: 45, color: "#3b82f6" },
@@ -95,10 +92,10 @@ const StatCard = ({ title, value, unit, icon: Icon, color, isAlert }: { title: s
         <span className={`text-[10px] font-semibold ${isAlert ? 'text-red-400' : 'text-gray-500'} uppercase tracking-wider`}>{title}</span>
         <div className="flex items-end justify-between mt-2">
             <div className="flex items-baseline gap-1">
-                <span className={`text-2xl font-bold ${isAlert ? 'text-red-100' : 'text-gray-100'}`}>{value}</span>
-                <span className={`text-xs ${isAlert ? 'text-red-300' : 'text-gray-500'} font-medium`}>{unit}</span>
+                <span className={`text-lg font-bold ${isAlert ? 'text-red-100' : 'text-gray-100'}`}>{value}</span>
+                <span className={`text-[10px] ${isAlert ? 'text-red-300' : 'text-gray-500'} font-medium`}>{unit}</span>
             </div>
-            <Icon size={18} className="mb-1" style={{ color }} />
+            <Icon size={16} className="mb-0.5" style={{ color }} />
         </div>
     </div>
 );
@@ -141,6 +138,17 @@ export default function SecurityDemo() {
     }, [paused, isUnderAttack]);
 
     const currentStats = useMemo(() => dataPoints[dataPoints.length - 1], [dataPoints]);
+
+    // Dynamic availability data for the pie chart
+    const currentAvailability = useMemo(() => {
+        const val = parseFloat(currentStats.availability);
+        return [
+            { name: "Available", value: val },
+            { name: "Down", value: Math.max(0, 100 - val - 2) },
+            { name: "Maintenance", value: 2 },
+        ];
+    }, [currentStats.availability]);
+
 
     if (!mounted) return null;
 
@@ -198,8 +206,8 @@ export default function SecurityDemo() {
                                 key={region}
                                 onClick={() => setActiveRegion(region)}
                                 className={`px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all duration-200 ${activeRegion === region
-                                        ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 shadow-sm'
-                                        : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                                    ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 shadow-sm'
+                                    : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5'
                                     }`}
                             >
                                 {region}
@@ -212,8 +220,8 @@ export default function SecurityDemo() {
                         <button
                             onClick={() => setIsUnderAttack(!isUnderAttack)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${isUnderAttack
-                                    ? 'bg-red-500 text-white border-red-600 shadow-red-500/20 shadow-lg'
-                                    : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20'
+                                ? 'bg-red-500 text-white border-red-600 shadow-red-500/20 shadow-lg'
+                                : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20'
                                 }`}
                         >
                             <Zap size={13} fill={isUnderAttack ? "currentColor" : "none"} />
@@ -239,7 +247,7 @@ export default function SecurityDemo() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={availabilityData}
+                                        data={currentAvailability}
                                         innerRadius="65%"
                                         outerRadius="85%"
                                         paddingAngle={4}
@@ -255,8 +263,8 @@ export default function SecurityDemo() {
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                 <div className="flex flex-col items-center">
-                                    <span className={`text-3xl font-bold tracking-tighter transition-colors ${isUnderAttack ? 'text-red-500' : 'text-white'}`}>
-                                        {isUnderAttack ? '64.2' : '98.4'}<span className="text-lg text-gray-500">%</span>
+                                    <span className={`text-2xl font-bold tracking-tighter transition-colors ${isUnderAttack ? 'text-red-500' : 'text-white'}`}>
+                                        {currentStats.availability}<span className="text-sm text-gray-500">%</span>
                                     </span>
                                     <span className={`text-[9px] font-semibold uppercase tracking-widest mt-1 ${isUnderAttack ? 'text-red-400' : 'text-emerald-500'}`}>
                                         {isUnderAttack ? 'CRITICAL' : 'EXCELLENT'}
@@ -462,8 +470,8 @@ export default function SecurityDemo() {
                                             key={s}
                                             onClick={() => toggleService(s)}
                                             className={`border rounded px-2 py-1.5 flex items-center justify-between transition-all duration-200 ${isActive
-                                                    ? 'bg-white/5 border-white/10 hover:bg-white/10'
-                                                    : 'bg-transparent border-transparent opacity-50 hover:opacity-100'
+                                                ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                                                : 'bg-transparent border-transparent opacity-50 hover:opacity-100'
                                                 }`}
                                         >
                                             <span className="text-[10px] font-mono text-gray-300">{s}</span>
