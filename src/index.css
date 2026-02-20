@@ -60,7 +60,7 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth; */
     -ms-overflow-style: none;
     /* Internet Explorer 10+ */
     scrollbar-width: none;

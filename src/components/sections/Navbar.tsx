@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { scrollToSection } from "@/lib/utils";
 
 const navLinks = [
     { label: "About", href: "#about" },
@@ -19,6 +20,12 @@ export default function Navbar() {
         window.addEventListener("scroll", onScroll);
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
+
+    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        e.preventDefault();
+        scrollToSection(href);
+        if (mobileOpen) setMobileOpen(false);
+    };
 
     return (
         <motion.nav
@@ -39,6 +46,7 @@ export default function Navbar() {
                         <a
                             key={link.href}
                             href={link.href}
+                            onClick={(e) => handleNavClick(e, link.href)}
                             className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                         >
                             {link.label}
@@ -46,6 +54,7 @@ export default function Navbar() {
                     ))}
                     <a
                         href="#contact"
+                        onClick={(e) => handleNavClick(e, "#contact")}
                         className="text-sm font-medium px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity glow-primary"
                     >
                         Get Started
@@ -76,7 +85,7 @@ export default function Navbar() {
                                 <a
                                     key={link.href}
                                     href={link.href}
-                                    onClick={() => setMobileOpen(false)}
+                                    onClick={(e) => handleNavClick(e, link.href)}
                                     className="text-foreground/80 hover:text-primary transition-colors"
                                 >
                                     {link.label}
@@ -84,7 +93,7 @@ export default function Navbar() {
                             ))}
                             <a
                                 href="#contact"
-                                onClick={() => setMobileOpen(false)}
+                                onClick={(e) => handleNavClick(e, "#contact")}
                                 className="text-center font-medium px-5 py-2 rounded-lg bg-primary text-primary-foreground"
                             >
                                 Get Started
@@ -96,3 +105,4 @@ export default function Navbar() {
         </motion.nav>
     );
 }
+

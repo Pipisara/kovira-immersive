@@ -91,11 +91,11 @@ export const InfiniteMovingCards = ({
     const getSpeed = () => {
         if (containerRef.current) {
             if (speed === "fast") {
-                containerRef.current.style.setProperty("--animation-duration", "20s");
-            } else if (speed === "normal") {
                 containerRef.current.style.setProperty("--animation-duration", "40s");
-            } else {
+            } else if (speed === "normal") {
                 containerRef.current.style.setProperty("--animation-duration", "80s");
+            } else {
+                containerRef.current.style.setProperty("--animation-duration", "120s");
             }
         }
     };
@@ -173,6 +173,7 @@ export default function Testimonials() {
                         items={testimonials}
                         direction="left"
                         speed="slow"
+                        className="hidden md:block"
                     />
                     <InfiniteMovingCards
                         items={testimonials.slice().reverse()}

@@ -143,6 +143,7 @@ export default function LiveExperience() {
 
     const sectionRef = useRef<HTMLElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-10% 0px -10% 0px" });
+    const isManualScrolling = useRef(false);
     const activeCategoryRef = useRef(activeCategory.id);
     const stRef = useRef<any>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -162,6 +163,9 @@ export default function LiveExperience() {
                 anticipatePin: 1,
                 refreshPriority: 10,
                 onUpdate: (self) => {
+                    // Skip automatic updates if we're currently smooth-scrolling from a click
+                    if (isManualScrolling.current) return;
+
                     const progress = self.progress;
                     const totalSteps = demoCategories.length;
                     const index = Math.min(Math.floor(progress * totalSteps), totalSteps - 1);
@@ -196,18 +200,32 @@ export default function LiveExperience() {
         if (cat.id === activeCategory.id) return;
 
         const index = demoCategories.findIndex(c => c.id === cat.id);
+
+        // Mark as manual scroll to prevent onUpdate from fighting with us
+        isManualScrolling.current = true;
+
+        // Update states immediately
+        setActiveCategory(cat);
+        setActiveDemo(cat.demos[0]);
+        activeCategoryRef.current = cat.id;
+
         if (stRef.current) {
+            ScrollTrigger.refresh();
             const st = stRef.current;
             const scrollPos = st.start + (st.end - st.start) * (index / demoCategories.length + 0.05);
+
             window.scrollTo({
                 top: scrollPos,
                 behavior: 'smooth'
             });
+
+            // Reset manual scrolling flag after the smooth scroll is likely finished
+            setTimeout(() => {
+                isManualScrolling.current = false;
+            }, 1000);
         } else {
-            setActiveCategory(cat);
-            setActiveDemo(cat.demos[0]);
+            isManualScrolling.current = false;
         }
-        activeCategoryRef.current = cat.id;
     };
 
     const handleDemoChange = (demo: SubDemo) => {

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowDown, ChevronRight } from "lucide-react";
+import { scrollToSection } from "@/lib/utils";
 
 const charVariants = {
     hidden: { opacity: 0, y: 60, rotateX: -90 },
@@ -32,6 +33,11 @@ function AnimatedText({ text, className }: { text: string; className?: string })
 }
 
 export default function Hero() {
+    const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        e.preventDefault();
+        scrollToSection(href);
+    };
+
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
             {/* 3D Background is now fixed/global — rendered in Index.tsx */}
@@ -76,6 +82,7 @@ export default function Hero() {
                 >
                     <motion.a
                         href="#services"
+                        onClick={(e) => handleScroll(e, "#services")}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.97 }}
                         className="group px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow-primary inline-flex items-center justify-center gap-2"
@@ -85,6 +92,7 @@ export default function Hero() {
                     </motion.a>
                     <motion.a
                         href="#contact"
+                        onClick={(e) => handleScroll(e, "#contact")}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.97 }}
                         className="px-8 py-3.5 rounded-lg border border-border text-foreground hover:border-primary/50 hover:text-primary transition-colors inline-flex items-center justify-center"
