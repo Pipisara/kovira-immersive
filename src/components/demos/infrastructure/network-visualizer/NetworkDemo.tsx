@@ -173,11 +173,11 @@ const Toolbar = ({ activeTool, setActiveTool, onSave }: { activeTool: string, se
     </div>
 );
 
-const NodeLibrary = ({ onAdd }: { onAdd: (type: NodeData['type']) => void }) => (
+const NodeLibrary = ({ onAdd, selectedId }: { onAdd: (type: NodeData['type']) => void, selectedId: string | null }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-20 right-72 w-48 bg-white border border-gray-200 rounded-2xl shadow-xl p-4 z-50 overflow-y-auto max-h-[400px]"
+        className={`absolute top-20 transition-all duration-300 w-48 bg-white border border-gray-200 rounded-2xl shadow-xl p-4 z-50 overflow-y-auto max-h-[400px] ${selectedId ? 'right-[310px]' : 'right-6'}`}
     >
         <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Components</h4>
         <div className="grid grid-cols-2 gap-2">
@@ -371,9 +371,9 @@ export default function NetworkDemo() {
             </div>
 
             {/* Canvas Area */}
-            <div className="relative w-full h-full pt-16 pointer-events-auto">
+            <div className="relative w-full h-full pt-16 pointer-events-auto overflow-auto scrollbar-none cursor-grab active:cursor-grabbing">
                 <div
-                    className="w-[2500px] h-[2500px] transition-transform duration-75"
+                    className="min-w-full h-[1000px] transition-transform duration-75 relative"
                     style={{
                         transform: `scale(${zoom})`,
                         transformOrigin: '0 0'
@@ -450,11 +450,11 @@ export default function NetworkDemo() {
 
             <button
                 onClick={(e) => { e.stopPropagation(); setIsLibraryOpen(!isLibraryOpen); }}
-                className={`absolute top-20 right-72 w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-xl z-50 ${isLibraryOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
+                className={`absolute top-20 transition-all duration-300 w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl z-50 ${isLibraryOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'} ${selectedId ? 'right-[310px]' : 'right-6'}`}
             >
                 {isLibraryOpen ? <X size={24} /> : <Plus size={24} />}
             </button>
-            {isLibraryOpen && <NodeLibrary onAdd={handleAddNode} />}
+            {isLibraryOpen && <NodeLibrary onAdd={handleAddNode} selectedId={selectedId} />}
 
             <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} onSave={handleSave} />
 
