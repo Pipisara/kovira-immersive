@@ -97,54 +97,43 @@ const INITIAL_NODES: NodeData[] = [
     {
         id: "webhook",
         type: "trigger",
-        label: "HTTP Trigger",
-        subLabel: "POST /webhook/name",
+        label: "HTTP Webhook",
+        subLabel: "POST /v1/analyze",
         icon: Zap,
-        position: { x: 80, y: 200 },
+        position: { x: 80, y: 250 },
         color: "#22c55e",
         status: "idle",
         outputs: ["main"],
     },
     {
-        id: "validation",
+        id: "security",
         type: "action",
-        label: "Payload Validator",
-        subLabel: "Schema & Sanitize",
-        icon: Code,
-        position: { x: 330, y: 200 },
-        color: "#f59e0b",
+        label: "Security Shield",
+        subLabel: "JWT & Rate Limit",
+        icon: Shield,
+        position: { x: 330, y: 250 },
+        color: "#0ea5e9",
         status: "idle",
         outputs: ["main"],
     },
     {
-        id: "ai-engine",
+        id: "ai-agent",
         type: "action",
-        label: "AI Engine",
-        subLabel: "LLM Processing",
+        label: "AI Intelligence",
+        subLabel: "Claude 3.5 Sonnet",
         icon: BrainCircuit,
-        position: { x: 580, y: 200 },
+        position: { x: 580, y: 250 },
         color: "#a855f7",
         status: "idle",
         outputs: ["main"],
     },
     {
-        id: "router",
-        type: "logic",
-        label: "Intent Router",
-        subLabel: "Branch by confidence",
-        icon: GitBranch,
-        position: { x: 830, y: 200 },
-        color: "#06b6d4",
-        status: "idle",
-        outputs: ["true", "false"],
-    },
-    {
-        id: "database",
+        id: "persistence",
         type: "action",
-        label: "PostgreSQL Write",
-        subLabel: "Persist enriched data",
+        label: "Vector Storage",
+        subLabel: "PostgreSQL Write",
         icon: Database,
-        position: { x: 1080, y: 200 },
+        position: { x: 830, y: 250 },
         color: "#3b82f6",
         status: "idle",
         outputs: ["main"],
@@ -153,189 +142,78 @@ const INITIAL_NODES: NodeData[] = [
         id: "response",
         type: "action",
         label: "API Response",
-        subLabel: "Return JSON payload",
+        subLabel: "JSON Payload",
         icon: Terminal,
-        position: { x: 1330, y: 200 },
+        position: { x: 1080, y: 250 },
         color: "#ea4335",
         status: "idle",
         outputs: ["main"],
     },
 
-    // ── Top Row: AI Tool Nodes (dashed) ───────────────────────
+    // ── Supporting Row (Connected via sub-flow) ────────────────
     {
-        id: "llm-model",
+        id: "llm-provider",
         type: "logic",
-        label: "Claude 3.5 Sonnet",
-        subLabel: "Anthropic / 200k ctx",
+        label: "Anthropic API",
+        subLabel: "Model Hook",
         icon: Cpu,
-        position: { x: 580, y: 50 },
+        position: { x: 580, y: 80 },
         color: "#8b5cf6",
         status: "idle",
         outputs: [],
     },
     {
-        id: "cache-layer",
+        id: "cache",
         type: "action",
         label: "Redis Cache",
-        subLabel: "L1 / 15min TTL",
+        subLabel: "L1 Retrieval",
         icon: Server,
-        position: { x: 830, y: 50 },
+        position: { x: 830, y: 80 },
         color: "#14b8a6",
         status: "idle",
         outputs: [],
     },
-    {
-        id: "slack-out",
-        type: "action",
-        label: "Slack Notify",
-        subLabel: "#ai-alerts channel",
-        icon: Bell,
-        position: { x: 1080, y: 50 },
-        color: "#ec4899",
-        status: "idle",
-        outputs: [],
-    },
 
-    // ── Bottom Row: Supporting Services (dashed) ──────────────
-    {
-        id: "auth-svc",
-        type: "action",
-        label: "Auth Service",
-        subLabel: "JWT / RBAC verify",
-        icon: Shield,
-        position: { x: 330, y: 390 },
-        color: "#0ea5e9",
-        status: "idle",
-        outputs: [],
-    },
-    {
-        id: "vector-db",
-        type: "action",
-        label: "pgvector Search",
-        subLabel: "Semantic / cos-sim",
-        icon: Search,
-        position: { x: 580, y: 390 },
-        color: "#6366f1",
-        status: "idle",
-        outputs: [],
-    },
-    {
-        id: "enrichment",
-        type: "action",
-        label: "Cultural Enrichment",
-        subLabel: "Etymology & Lineage",
-        icon: Layers,
-        position: { x: 830, y: 390 },
-        color: "#d946ef",
-        status: "idle",
-        outputs: [],
-    },
-    {
-        id: "email-out",
-        type: "action",
-        label: "SMTP Fallback",
-        subLabel: "SendGrid / notify",
-        icon: Mail,
-        position: { x: 1080, y: 390 },
-        color: "#f97316",
-        status: "idle",
-        outputs: [],
-    },
-
-    // ── Right Cluster: Output & Observability ────────────────
-    {
-        id: "webhook-out",
-        type: "action",
-        label: "Outbound Webhook",
-        subLabel: "POST /callback",
-        icon: Send,
-        position: { x: 1580, y: 200 },
-        color: "#10b981",
-        status: "idle",
-        outputs: [],
-    },
-    {
-        id: "analytics",
-        type: "action",
-        label: "ClickHouse",
-        subLabel: "Analytics Events",
-        icon: BarChart2,
-        position: { x: 1580, y: 50 },
-        color: "#f59e0b",
-        status: "idle",
-        outputs: [],
-    },
-    {
-        id: "audit-log",
-        type: "action",
-        label: "Audit Logger",
-        subLabel: "Compliance / SIEM",
-        icon: FileText,
-        position: { x: 1580, y: 390 },
-        color: "#64748b",
-        status: "idle",
-        outputs: [],
-    },
-
-    // ── Bottom Infra Row: Resilience Layer ─────────────────
-    {
-        id: "queue",
-        type: "action",
-        label: "SQS Queue",
-        subLabel: "Dead-letter buffer",
-        icon: Inbox,
-        position: { x: 330, y: 560 },
-        color: "#6366f1",
-        status: "idle",
-        outputs: [],
-    },
+    // ── Error Handling Path (Critical visibility) ──────────────
     {
         id: "error-handler",
         type: "logic",
         label: "Error Handler",
-        subLabel: "Retry / circuit breaker",
+        subLabel: "Global Exception Trap",
         icon: AlertTriangle,
-        position: { x: 830, y: 560 },
-        color: "#f43f5e",
+        position: { x: 450, y: 450 },
+        color: "#ef4444",
         status: "idle",
         outputs: [],
     },
     {
-        id: "apm",
+        id: "slack-alert",
         type: "action",
-        label: "DataDog APM",
-        subLabel: "Traces & Metrics",
-        icon: Activity,
-        position: { x: 1330, y: 560 },
-        color: "#a78bfa",
+        label: "Slack Alert",
+        subLabel: "#ops-warnings",
+        icon: Bell,
+        position: { x: 700, y: 450 },
+        color: "#ec4899",
         status: "idle",
         outputs: [],
     },
 ];
 
 const INITIAL_EDGES: EdgeData[] = [
-    // Main pipeline
-    { id: "e1", source: "webhook", target: "validation" },
-    { id: "e2", source: "validation", target: "ai-engine" },
-    { id: "e3", source: "ai-engine", target: "router" },
-    { id: "e4", source: "router", target: "database", label: "true" },
-    { id: "e5", source: "database", target: "response" },
-    { id: "e13", source: "response", target: "webhook-out" },
-    // Level-1 sub-tools (dashed up/down)
-    { id: "e6", source: "validation", target: "auth-svc", subFlow: true },
-    { id: "e7", source: "ai-engine", target: "llm-model", subFlow: true },
-    { id: "e8", source: "ai-engine", target: "vector-db", subFlow: true },
-    { id: "e9", source: "router", target: "cache-layer", subFlow: true },
-    { id: "e10", source: "router", target: "enrichment", label: "false", subFlow: true },
-    { id: "e11", source: "cache-layer", target: "slack-out", subFlow: true },
-    { id: "e12", source: "enrichment", target: "email-out", subFlow: true },
-    // Right cluster (dashed)
-    { id: "e14", source: "webhook-out", target: "analytics", subFlow: true },
-    { id: "e15", source: "webhook-out", target: "audit-log", subFlow: true },
-    // Bottom infra row (dashed)
-    { id: "e16", source: "validation", target: "queue", subFlow: true },
-    { id: "e17", source: "router", target: "error-handler", subFlow: true },
-    { id: "e18", source: "response", target: "apm", subFlow: true },
+    // Main flow
+    { id: "e1", source: "webhook", target: "security" },
+    { id: "e2", source: "security", target: "ai-agent" },
+    { id: "e3", source: "ai-agent", target: "persistence" },
+    { id: "e4", source: "persistence", target: "response" },
+
+    // Sub-flows (Supporting services)
+    { id: "e5", source: "ai-agent", target: "llm-provider", subFlow: true },
+    { id: "e6", source: "persistence", target: "cache", subFlow: true },
+
+    // Error paths
+    { id: "err-1", source: "security", target: "error-handler", label: "on error", subFlow: true },
+    { id: "err-2", source: "ai-agent", target: "error-handler", label: "on error", subFlow: true },
+    { id: "err-3", source: "error-handler", target: "slack-alert", animated: true }
 ];
 
 // --- Components ---
@@ -693,29 +571,32 @@ export default function AutomationDemo() {
 
         try {
             // --- Step 1: Webhook Trigger ---
-            addLog(`[webhook] Incoming POST /webhook/name — payload: "${nameToProcess}"`, "info");
+            addLog(`[webhook] Incoming request for "${nameToProcess}"`, "info");
             setExecutionStep(1);
             setNodes(prev => prev.map(n => n.id === 'webhook' ? { ...n, status: 'success' } : n));
-            await new Promise(r => setTimeout(r, 500));
-
-            // --- Step 2: Validation + Auth ---
-            setExecutionStep(2);
-            addLog(`[validator] Running schema check & sanitization...`, "info");
-            setNodes(prev => prev.map(n =>
-                ['validation', 'auth-svc'].includes(n.id) ? { ...n, status: 'running' } : n
-            ));
             await new Promise(r => setTimeout(r, 600));
-            if (nameToProcess.length > 30) throw new Error("Payload size limit exceeded (max 30 chars)");
-            addLog(`[validator] ✓ Input clean — auth token verified`, "success");
-            setNodes(prev => prev.map(n =>
-                ['validation', 'auth-svc'].includes(n.id) ? { ...n, status: 'success' } : n
-            ));
 
-            // --- Step 3: AI Engine + LLM + Vector Search ---
+            // --- Step 2: Security & Shield ---
+            setExecutionStep(2);
+            addLog(`[security] Verifying JWT & Checking Rate Limits...`, "info");
+            setNodes(prev => prev.map(n => n.id === 'security' ? { ...n, status: 'running' } : n));
+            await new Promise(r => setTimeout(r, 800));
+
+            if (nameToProcess.toLowerCase() === "error") {
+                throw new Error("Simulated system failure: Malformed payload detected");
+            }
+            if (nameToProcess.length > 30) {
+                throw new Error("Payload size limit exceeded");
+            }
+
+            addLog(`[security] ✓ Security check passed`, "success");
+            setNodes(prev => prev.map(n => n.id === 'security' ? { ...n, status: 'success' } : n));
+
+            // --- Step 3: AI Engine + LLM ---
             setExecutionStep(3);
-            addLog(`[ai-engine] Invoking Claude 3.5 Sonnet via Anthropic API...`, "info");
+            addLog(`[ai-agent] Initializing Claude 3.5 Sonnet instance...`, "info");
             setNodes(prev => prev.map(n =>
-                ['ai-engine', 'llm-model', 'vector-db'].includes(n.id) ? { ...n, status: 'running' } : n
+                ['ai-agent', 'llm-provider'].includes(n.id) ? { ...n, status: 'running' } : n
             ));
 
             const response = await fetch("https://n8n.pipisara.me/webhook/ai-name-intelligence", {
@@ -723,46 +604,36 @@ export default function AutomationDemo() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: nameToProcess })
             });
-            if (!response.ok) throw new Error(`Upstream Error: ${response.status}`);
 
-            addLog(`[llm-model] Token stream complete — embedding generated`, "info");
-            addLog(`[vector-db] Semantic similarity search returned top-5 clusters`, "info");
+            if (!response.ok) throw new Error(`Upstream AI Error: ${response.status}`);
+
+            addLog(`[ai-agent] Intelligence gathered successfully`, "success");
             setNodes(prev => prev.map(n =>
-                ['ai-engine', 'llm-model', 'vector-db'].includes(n.id) ? { ...n, status: 'success' } : n
+                ['ai-agent', 'llm-provider'].includes(n.id) ? { ...n, status: 'success' } : n
             ));
 
-            // --- Step 4: Intent Router ---
+            // --- Step 4: Persistence ---
             setExecutionStep(4);
-            addLog(`[router] Confidence score > 0.85 → routing to primary branch`, "info");
-            setNodes(prev => prev.map(n => n.id === 'router' ? { ...n, status: 'running' } : n));
-            await new Promise(r => setTimeout(r, 400));
+            addLog(`[persistence] Committing to Vector Database...`, "info");
             setNodes(prev => prev.map(n =>
-                ['router', 'cache-layer', 'enrichment'].includes(n.id) ? { ...n, status: 'success' } : n
-            ));
-            addLog(`[cache-layer] Redis MISS — fetching from source`, "info");
-            addLog(`[enrichment] Cultural etymology records merged`, "success");
-
-            // --- Step 5: PostgreSQL Write + Slack ---
-            setExecutionStep(5);
-            addLog(`[database] Writing enriched record to PostgreSQL...`, "info");
-            setNodes(prev => prev.map(n =>
-                ['database', 'slack-out'].includes(n.id) ? { ...n, status: 'running' } : n
+                ['persistence', 'cache'].includes(n.id) ? { ...n, status: 'running' } : n
             ));
             await new Promise(r => setTimeout(r, 700));
+            addLog(`[cache] Schema synchronized`, "info");
+            addLog(`[persistence] ✓ Records persisted at index 0x${Math.floor(Math.random() * 0xffffff).toString(16)}`, "success");
             setNodes(prev => prev.map(n =>
-                ['database', 'slack-out', 'email-out'].includes(n.id) ? { ...n, status: 'success' } : n
+                ['persistence', 'cache'].includes(n.id) ? { ...n, status: 'success' } : n
             ));
-            addLog(`[slack-out] Notification dispatched to #ai-alerts`, "success");
 
-            // --- Step 6: Final Response ---
-            setExecutionStep(6);
+            // --- Step 5: Final Response ---
+            setExecutionStep(5);
+            addLog(`[response] Returning JSON payload to client`, "info");
             setNodes(prev => prev.map(n => n.id === 'response' ? { ...n, status: 'success' } : n));
 
             const result: AIResponse = await response.json();
-            if (result.status === 'error') throw new Error(result.message || "Engine Error");
+            if (result.status === 'error') throw new Error(result.message || "Logic Engine Error");
 
-            const endTime = Date.now();
-            const latency = endTime - startTime;
+            const latency = Date.now() - startTime;
             setResultData(result.data);
             setStats(prev => ({
                 executions: prev.executions + 1,
@@ -770,12 +641,21 @@ export default function AutomationDemo() {
                 successRate: Math.round((prev.executions * prev.successRate + 100) / (prev.executions + 1)),
                 totalNodes: INITIAL_NODES.length
             }));
-            addLog(`[response] Pipeline complete — ${latency}ms total`, "success");
-            addLog(`[exec] ID: ${result.execution_id.split('-')[0]}...`, "info");
+            addLog(`[pipeline] Complete — Total latency: ${latency}ms`, "success");
 
         } catch (err: any) {
-            addLog(`[error] Failure: ${err.message}`, "error");
-            setNodes(prev => prev.map(n => n.status === 'running' ? { ...n, status: 'error' } : n));
+            addLog(`[error] CRITICAL: ${err.message}`, "error");
+
+            // Highlight Error Path
+            setNodes(prev => prev.map(n => {
+                if (n.status === 'running') return { ...n, status: 'error' };
+                if (['error-handler', 'slack-alert'].includes(n.id)) return { ...n, status: 'error' };
+                return n;
+            }));
+
+            addLog(`[error-handler] Exception trapped. Routing to Slack alert.`, "warning");
+            addLog(`[slack-alert] Admin notified of failure.`, "info");
+
             setStats(prev => ({
                 ...prev,
                 executions: prev.executions + 1,
@@ -874,7 +754,7 @@ export default function AutomationDemo() {
                 <motion.div
                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 to-indigo-500"
                     style={{ boxShadow: '0 0 8px rgba(168,85,247,0.7)' }}
-                    animate={{ width: isExecuting ? `${(executionStep / 6) * 100}%` : executionStep >= 6 ? '100%' : '0%' }}
+                    animate={{ width: isExecuting ? `${(executionStep / 5) * 100}%` : executionStep >= 5 ? '100%' : '0%' }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
                 />
             </div>
