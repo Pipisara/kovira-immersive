@@ -74,6 +74,7 @@ export default function Services() {
                     scrub: 1,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
+                    refreshPriority: 5,
                 },
             });
 
@@ -98,7 +99,7 @@ export default function Services() {
         <section
             id="services"
             ref={containerRef as unknown as React.RefObject<HTMLDivElement>}
-            className="relative overflow-hidden"
+            className="relative overflow-hidden bg-background z-10"
         >
             <div
                 ref={trackRef}

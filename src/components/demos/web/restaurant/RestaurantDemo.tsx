@@ -25,8 +25,13 @@ interface Product {
     count: number;
 }
 
+interface CartItem extends Product {
+    quantity: number;
+}
+
 // Mock Data
 const categories: Category[] = [
+    { id: "all", name: "All", icon: <div className="text-xl">✨</div> },
     { id: "veg-mania", name: "Veg. Mania", icon: <div className="text-xl">🍔</div> },
     { id: "sandwich", name: "Sandwich", icon: <div className="text-xl">🥪</div> },
     { id: "club-veg", name: "Club Veg.", icon: <div className="text-xl">🥗</div> },
@@ -94,10 +99,65 @@ const ingredients = [
 ];
 
 export default function RestaurantDemo() {
-    const [selectedCategory, setSelectedCategory] = useState("veg-mania");
+    const [selectedCategory, setSelectedCategory] = useState("all");
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showDetailPanel, setShowDetailPanel] = useState(false);
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [isCartOpen, setIsCartOpen] = useState(false);
+
+    const addToCart = (product: Product, quantity: number = 1) => {
+        setCart(prev => {
+            const existing = prev.find(item => item.id === product.id);
+            if (existing) {
+                return prev.map(item =>
+                    item.id === product.id
+                        ? { ...item, quantity: item.quantity + quantity }
+                        : item
+                );
+            }
+            return [...prev, { ...product, quantity }];
+        });
+        setIsCartOpen(true);
+    };
+
+    const removeFromCart = (productId: number) => {
+        setCart(prev => prev.filter(item => item.id !== productId));
+    };
+
+    const updateCartQuantity = (productId: number, delta: number) => {
+        setCart(prev => prev.map(item => {
+            if (item.id === productId) {
+                const newQty = Math.max(1, item.quantity + delta);
+                return { ...item, quantity: newQty };
+            }
+            return item;
+        }));
+    };
+
+    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
+
+    const handleCheckout = () => {
+        setIsCheckingOut(true);
+        // Simulate API call
+        setTimeout(() => {
+            setIsCheckingOut(false);
+            setIsCheckoutSuccess(true);
+            setTimeout(() => {
+                setCart([]);
+                setIsCheckoutSuccess(false);
+                setIsCartOpen(false);
+            }, 3000);
+        }, 1500);
+    };
+
+    const filteredProducts = selectedCategory === "all"
+        ? products
+        : products.filter(p => p.category === selectedCategory);
 
     // Initial load selection handled differently to prevent layout shift issues on small screens
     // We start with null and let user click, or auto-select on mount if screen is large (logic omitted for simplicity)
@@ -168,8 +228,8 @@ export default function RestaurantDemo() {
                                     onClick={() => setSelectedCategory(cat.id)}
                                     title={cat.name}
                                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${selectedCategory === cat.id
-                                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                                            : "text-slate-500 hover:bg-slate-50"
+                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                                        : "text-slate-500 hover:bg-slate-50"
                                         } md:justify-center lg:justify-start`}
                                 >
                                     <span className={`p-1 rounded-md shrink-0 ${selectedCategory === cat.id ? "bg-white/20" : "bg-slate-100"}`}>{cat.icon}</span>
@@ -183,7 +243,7 @@ export default function RestaurantDemo() {
                 {/* Main Content */}
                 <main className="flex-1 flex flex-col relative overflow-hidden md:ml-20 lg:ml-64 transition-all duration-300 w-full">
                     {/* Header */}
-                    <header className="px-4 md:px-8 py-5 flex items-center justify-between shrink-0 gap-4">
+                    <header className="px-4 md:px-6 lg:px-8 py-5 flex items-center justify-between shrink-0 gap-4">
                         <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-600">
                             <Menu size={24} />
                         </button>
@@ -201,18 +261,32 @@ export default function RestaurantDemo() {
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 ml-auto">
-                            <button className="relative w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-600 hover:text-orange-500">
+                            <button
+                                onClick={() => setIsCartOpen(true)}
+                                className="relative w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-600 hover:text-orange-500 transition-colors"
+                            >
                                 <ShoppingCart size={20} />
-                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+                                <AnimatePresence>
+                                    {cartCount > 0 && (
+                                        <motion.span
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            exit={{ scale: 0 }}
+                                            className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                                        >
+                                            {cartCount}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
                             </button>
-                            <button className="relative w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-600 hover:text-orange-500">
+                            <button className="relative w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-600 hover:text-orange-500 transition-colors">
                                 <Bell size={20} />
                                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">1</span>
                             </button>
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-8 flex gap-8">
+                    <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 pb-8 flex gap-6 lg:gap-8">
                         {/* Product Grid */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-5">
@@ -223,16 +297,16 @@ export default function RestaurantDemo() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {products.map((product) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+                                {filteredProducts.map((product) => (
                                     <div
                                         key={product.id}
                                         onClick={() => handleProductClick(product)}
-                                        className={`group relative bg-white rounded-[2rem] p-5 pb-8 cursor-pointer transition-all duration-300 border border-transparent hover:border-orange-100 hover:shadow-xl hover:-translate-y-1 ${selectedProduct?.id === product.id ? "ring-2 ring-orange-500/20 shadow-lg" : "shadow-sm"
+                                        className={`group relative bg-white rounded-[2rem] p-4 sm:p-5 pb-6 sm:pb-8 cursor-pointer transition-all duration-300 border border-transparent hover:border-orange-100 hover:shadow-xl hover:-translate-y-1 ${selectedProduct?.id === product.id ? "ring-2 ring-orange-500/20 shadow-lg" : "shadow-sm"
                                             }`}
                                     >
-                                        <div className="relative mb-4 h-32 flex items-center justify-center">
-                                            <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500 bg-slate-100">
+                                        <div className="relative mb-4 h-24 sm:h-32 flex items-center justify-center">
+                                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500 bg-slate-100">
                                                 <img
                                                     src={product.image}
                                                     alt={product.name}
@@ -245,27 +319,33 @@ export default function RestaurantDemo() {
                                         </div>
 
                                         <div className="text-center">
-                                            <h3 className="font-bold text-slate-800 leading-tight mb-1">{product.name}</h3>
-                                            <p className="text-sm text-slate-500 font-medium mb-3">{product.subName}</p>
+                                            <h3 className="font-bold text-slate-800 leading-tight mb-1 text-sm sm:text-base">{product.name}</h3>
+                                            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-3">{product.subName}</p>
 
                                             <div className="flex justify-center gap-0.5 mb-4">
                                                 {[...Array(5)].map((_, i) => (
                                                     <Star
                                                         key={i}
-                                                        size={12}
+                                                        size={10}
                                                         className={i < product.rating ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200"}
                                                     />
                                                 ))}
                                             </div>
 
                                             <div className="flex items-center justify-center gap-3 mb-4">
-                                                <span className="text-lg font-bold text-orange-500">${product.price}</span>
+                                                <span className="text-base sm:text-lg font-bold text-orange-500">${product.price}</span>
                                             </div>
 
                                             <div className="flex justify-center">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                                                    <Plus size={16} />
-                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        addToCart(product, 1);
+                                                    }}
+                                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-orange-500 group-hover:text-white transition-colors"
+                                                >
+                                                    <Plus size={14} />
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -274,10 +354,15 @@ export default function RestaurantDemo() {
                         </div>
 
                         {/* Detail View (Desktop Fixed) */}
-                        <div className="hidden 2xl:flex w-[340px] flex-col flex-shrink-0">
+                        <div className="hidden 2xl:flex w-[310px] flex-col flex-shrink-0">
                             <AnimatePresence mode="wait">
                                 {selectedProduct ? (
-                                    <DetailCard product={selectedProduct} onClose={() => setSelectedProduct(null)} isStatic={true} />
+                                    <DetailCard
+                                        product={selectedProduct}
+                                        onClose={() => setSelectedProduct(null)}
+                                        isStatic={true}
+                                        onAddToCart={addToCart}
+                                    />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
                                         <UtensilsCrossed size={48} className="mb-4 opacity-50" />
@@ -311,7 +396,130 @@ export default function RestaurantDemo() {
                                     product={selectedProduct}
                                     onClose={() => setShowDetailPanel(false)}
                                     isStatic={false}
+                                    onAddToCart={addToCart}
                                 />
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+
+                {/* Cart Drawer */}
+                <AnimatePresence>
+                    {isCartOpen && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsCartOpen(false)}
+                                className="absolute inset-0 bg-black/60 z-[60]"
+                            />
+                            <motion.div
+                                initial={{ x: "100%" }}
+                                animate={{ x: 0 }}
+                                exit={{ x: "100%" }}
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                className="absolute top-0 right-0 bottom-0 w-full sm:w-[380px] bg-white z-[70] shadow-2xl flex flex-col"
+                            >
+                                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                                    <h2 className="text-xl font-bold text-slate-800">Your Cart</h2>
+                                    <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                    {isCheckoutSuccess ? (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="h-full flex flex-col items-center justify-center text-center p-4"
+                                        >
+                                            <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6">
+                                                <motion.div
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ delay: 0.2 }}
+                                                >
+                                                    <UtensilsCrossed size={40} />
+                                                </motion.div>
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Order Confirmed!</h3>
+                                            <p className="text-slate-500 text-sm">
+                                                Your delicious meal is being prepared and will be with you soon.
+                                            </p>
+                                        </motion.div>
+                                    ) : cart.length === 0 ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center">
+                                            <ShoppingCart size={48} className="mb-4 opacity-20" />
+                                            <p className="font-medium">Your cart is empty</p>
+                                            <p className="text-xs">Add some delicious items from our menu!</p>
+                                        </div>
+                                    ) : (
+                                        cart.map(item => (
+                                            <div key={item.id} className="flex gap-4">
+                                                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h3 className="font-bold text-sm text-slate-800 truncate">{item.name}</h3>
+                                                        <button
+                                                            onClick={() => removeFromCart(item.id)}
+                                                            className="text-slate-300 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 mb-3">${item.price}</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-lg">
+                                                            <button
+                                                                onClick={() => updateCartQuantity(item.id, -1)}
+                                                                className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-orange-500"
+                                                            >
+                                                                <Minus size={10} />
+                                                            </button>
+                                                            <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                                                            <button
+                                                                onClick={() => updateCartQuantity(item.id, 1)}
+                                                                className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-orange-500"
+                                                            >
+                                                                <Plus size={10} />
+                                                            </button>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-700 ml-auto">
+                                                            ${(item.price * item.quantity).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {cart.length > 0 && !isCheckoutSuccess && (
+                                    <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <span className="text-slate-500 font-medium">Total Amount</span>
+                                            <span className="text-2xl font-bold text-slate-800">${cartTotal.toFixed(2)}</span>
+                                        </div>
+                                        <button
+                                            onClick={handleCheckout}
+                                            disabled={isCheckingOut}
+                                            className="w-full py-4 bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                        >
+                                            {isCheckingOut ? (
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <>
+                                                    Proceed to Checkout
+                                                    <ChevronRight size={18} />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
                             </motion.div>
                         </>
                     )}
@@ -321,7 +529,7 @@ export default function RestaurantDemo() {
     );
 }
 
-function DetailCard({ product, onClose, isStatic }: { product: Product, onClose: () => void, isStatic: boolean }) {
+function DetailCard({ product, onClose, isStatic, onAddToCart }: { product: Product, onClose: () => void, isStatic: boolean, onAddToCart: (p: Product, q: number) => void }) {
     const [count, setCount] = useState(product.count || 1);
 
     return (
@@ -390,7 +598,10 @@ function DetailCard({ product, onClose, isStatic }: { product: Product, onClose:
                         <Plus size={14} />
                     </button>
                 </div>
-                <button className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-xl shadow-orange-500/30 hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
+                <button
+                    onClick={() => onAddToCart(product, count)}
+                    className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-xl shadow-orange-500/30 hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                >
                     Add To Cart
                 </button>
             </div>
