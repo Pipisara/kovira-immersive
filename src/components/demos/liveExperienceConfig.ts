@@ -202,10 +202,10 @@ export const demoCategories: DemoCategory[] = [
             {
                 id: "ecommerce",
                 title: "Ecommerce Demo",
-                description: "Product catalog, cart management, and checkout flow for online stores.",
+                description: "Modern furniture store with category filtering, cart management, and checkout.",
                 icon: Store,
-                accentColor: "text-purple-400",
-                accentBg: "bg-purple-500/10 border-purple-500/30",
+                accentColor: "text-orange-400",
+                accentBg: "bg-orange-500/10 border-orange-500/30",
                 component: EcommerceDemo,
             },
             {
