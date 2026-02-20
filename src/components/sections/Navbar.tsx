@@ -4,8 +4,9 @@ import { Menu, X } from "lucide-react";
 import { scrollToSection } from "@/lib/utils";
 
 const navLinks = [
-    { label: "About", href: "#about" },
+    { label: "About Us", href: "#about" },
     { label: "Services", href: "#services" },
+    { label: "Demo", href: "#live-experience" },
     { label: "Why Us", href: "#why-us" },
     { label: "Testimonials", href: "#testimonials" },
     { label: "Contact", href: "#contact" },
