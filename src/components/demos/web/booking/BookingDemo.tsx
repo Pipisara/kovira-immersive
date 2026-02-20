@@ -8,7 +8,7 @@ import {
     MessageCircle,
     Video,
     Phone,
-    MapPin,
+
     Clock,
     Filter,
     CheckCircle2,
