@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, PanInfo, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { motion, PanInfo, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import {
     Play,
     Zap,
@@ -18,7 +18,26 @@ import {
     BrainCircuit,
     Database,
     Globe2,
-    Sparkles
+    Sparkles,
+    RotateCcw,
+    Copy,
+    ExternalLink,
+    Shield,
+    Lock,
+    Cpu,
+    GitBranch,
+    Server,
+    Bell,
+    Mail,
+    Search,
+    Layers,
+    Network,
+    Send,
+    BarChart2,
+    FileText,
+    Inbox,
+    AlertTriangle,
+    Activity
 } from "lucide-react";
 
 // --- Types ---
@@ -46,6 +65,7 @@ interface EdgeData {
     target: string;
     label?: string;
     animated?: boolean;
+    subFlow?: boolean;
 }
 
 interface LogEntry {
@@ -73,25 +93,26 @@ interface AIResponse {
 // --- Initial Data ---
 
 const INITIAL_NODES: NodeData[] = [
+    // ── Main Pipeline ──────────────────────────────────────────
     {
         id: "webhook",
         type: "trigger",
-        label: "Webhook",
-        subLabel: "Receive Name",
+        label: "HTTP Trigger",
+        subLabel: "POST /webhook/name",
         icon: Zap,
-        position: { x: 50, y: 250 },
-        color: "#22c55e", // Green
+        position: { x: 80, y: 200 },
+        color: "#22c55e",
         status: "idle",
         outputs: ["main"],
     },
     {
         id: "validation",
         type: "action",
-        label: "Validator",
-        subLabel: "Sanitize Input",
+        label: "Payload Validator",
+        subLabel: "Schema & Sanitize",
         icon: Code,
-        position: { x: 300, y: 250 },
-        color: "#f59e0b", // Amber
+        position: { x: 330, y: 200 },
+        color: "#f59e0b",
         status: "idle",
         outputs: ["main"],
     },
@@ -101,96 +122,321 @@ const INITIAL_NODES: NodeData[] = [
         label: "AI Engine",
         subLabel: "LLM Processing",
         icon: BrainCircuit,
-        position: { x: 550, y: 250 },
-        color: "#a855f7", // Purple
+        position: { x: 580, y: 200 },
+        color: "#a855f7",
         status: "idle",
         outputs: ["main"],
     },
     {
+        id: "router",
+        type: "logic",
+        label: "Intent Router",
+        subLabel: "Branch by confidence",
+        icon: GitBranch,
+        position: { x: 830, y: 200 },
+        color: "#06b6d4",
+        status: "idle",
+        outputs: ["true", "false"],
+    },
+    {
         id: "database",
         type: "action",
-        label: "Enrichment",
-        subLabel: "Cultural DB",
+        label: "PostgreSQL Write",
+        subLabel: "Persist enriched data",
         icon: Database,
-        position: { x: 800, y: 250 },
-        color: "#3b82f6", // Blue
+        position: { x: 1080, y: 200 },
+        color: "#3b82f6",
         status: "idle",
         outputs: ["main"],
     },
     {
         id: "response",
         type: "action",
-        label: "Response",
-        subLabel: "Return JSON",
+        label: "API Response",
+        subLabel: "Return JSON payload",
         icon: Terminal,
-        position: { x: 1050, y: 250 },
-        color: "#ea4335", // Red
+        position: { x: 1330, y: 200 },
+        color: "#ea4335",
         status: "idle",
         outputs: ["main"],
+    },
+
+    // ── Top Row: AI Tool Nodes (dashed) ───────────────────────
+    {
+        id: "llm-model",
+        type: "logic",
+        label: "Claude 3.5 Sonnet",
+        subLabel: "Anthropic / 200k ctx",
+        icon: Cpu,
+        position: { x: 580, y: 50 },
+        color: "#8b5cf6",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "cache-layer",
+        type: "action",
+        label: "Redis Cache",
+        subLabel: "L1 / 15min TTL",
+        icon: Server,
+        position: { x: 830, y: 50 },
+        color: "#14b8a6",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "slack-out",
+        type: "action",
+        label: "Slack Notify",
+        subLabel: "#ai-alerts channel",
+        icon: Bell,
+        position: { x: 1080, y: 50 },
+        color: "#ec4899",
+        status: "idle",
+        outputs: [],
+    },
+
+    // ── Bottom Row: Supporting Services (dashed) ──────────────
+    {
+        id: "auth-svc",
+        type: "action",
+        label: "Auth Service",
+        subLabel: "JWT / RBAC verify",
+        icon: Shield,
+        position: { x: 330, y: 390 },
+        color: "#0ea5e9",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "vector-db",
+        type: "action",
+        label: "pgvector Search",
+        subLabel: "Semantic / cos-sim",
+        icon: Search,
+        position: { x: 580, y: 390 },
+        color: "#6366f1",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "enrichment",
+        type: "action",
+        label: "Cultural Enrichment",
+        subLabel: "Etymology & Lineage",
+        icon: Layers,
+        position: { x: 830, y: 390 },
+        color: "#d946ef",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "email-out",
+        type: "action",
+        label: "SMTP Fallback",
+        subLabel: "SendGrid / notify",
+        icon: Mail,
+        position: { x: 1080, y: 390 },
+        color: "#f97316",
+        status: "idle",
+        outputs: [],
+    },
+
+    // ── Right Cluster: Output & Observability ────────────────
+    {
+        id: "webhook-out",
+        type: "action",
+        label: "Outbound Webhook",
+        subLabel: "POST /callback",
+        icon: Send,
+        position: { x: 1580, y: 200 },
+        color: "#10b981",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "analytics",
+        type: "action",
+        label: "ClickHouse",
+        subLabel: "Analytics Events",
+        icon: BarChart2,
+        position: { x: 1580, y: 50 },
+        color: "#f59e0b",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "audit-log",
+        type: "action",
+        label: "Audit Logger",
+        subLabel: "Compliance / SIEM",
+        icon: FileText,
+        position: { x: 1580, y: 390 },
+        color: "#64748b",
+        status: "idle",
+        outputs: [],
+    },
+
+    // ── Bottom Infra Row: Resilience Layer ─────────────────
+    {
+        id: "queue",
+        type: "action",
+        label: "SQS Queue",
+        subLabel: "Dead-letter buffer",
+        icon: Inbox,
+        position: { x: 330, y: 560 },
+        color: "#6366f1",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "error-handler",
+        type: "logic",
+        label: "Error Handler",
+        subLabel: "Retry / circuit breaker",
+        icon: AlertTriangle,
+        position: { x: 830, y: 560 },
+        color: "#f43f5e",
+        status: "idle",
+        outputs: [],
+    },
+    {
+        id: "apm",
+        type: "action",
+        label: "DataDog APM",
+        subLabel: "Traces & Metrics",
+        icon: Activity,
+        position: { x: 1330, y: 560 },
+        color: "#a78bfa",
+        status: "idle",
+        outputs: [],
     },
 ];
 
 const INITIAL_EDGES: EdgeData[] = [
+    // Main pipeline
     { id: "e1", source: "webhook", target: "validation" },
     { id: "e2", source: "validation", target: "ai-engine" },
-    { id: "e3", source: "ai-engine", target: "database" },
-    { id: "e4", source: "database", target: "response" },
+    { id: "e3", source: "ai-engine", target: "router" },
+    { id: "e4", source: "router", target: "database", label: "true" },
+    { id: "e5", source: "database", target: "response" },
+    { id: "e13", source: "response", target: "webhook-out" },
+    // Level-1 sub-tools (dashed up/down)
+    { id: "e6", source: "validation", target: "auth-svc", subFlow: true },
+    { id: "e7", source: "ai-engine", target: "llm-model", subFlow: true },
+    { id: "e8", source: "ai-engine", target: "vector-db", subFlow: true },
+    { id: "e9", source: "router", target: "cache-layer", subFlow: true },
+    { id: "e10", source: "router", target: "enrichment", label: "false", subFlow: true },
+    { id: "e11", source: "cache-layer", target: "slack-out", subFlow: true },
+    { id: "e12", source: "enrichment", target: "email-out", subFlow: true },
+    // Right cluster (dashed)
+    { id: "e14", source: "webhook-out", target: "analytics", subFlow: true },
+    { id: "e15", source: "webhook-out", target: "audit-log", subFlow: true },
+    // Bottom infra row (dashed)
+    { id: "e16", source: "validation", target: "queue", subFlow: true },
+    { id: "e17", source: "router", target: "error-handler", subFlow: true },
+    { id: "e18", source: "response", target: "apm", subFlow: true },
 ];
 
 // --- Components ---
 
+const NODE_TYPE_LABELS: Record<string, string> = {
+    trigger: 'TRIGGER',
+    action: 'ACTION',
+    logic: 'LOGIC',
+};
+
 const Node = ({
     data,
     scale,
-    onDragEnd
+    onDrag
 }: {
     data: NodeData;
     scale: number;
-    onDragEnd: (id: string, pos: Position) => void
+    active?: boolean;
+    onDrag: (id: string, pos: Position) => void;
 }) => {
     const Icon = data.icon;
+
+    const glowStyle = data.status === 'running'
+        ? { boxShadow: `0 0 0 2px ${data.color}60, 0 0 20px ${data.color}40` }
+        : data.status === 'success'
+            ? { boxShadow: `0 0 0 2px #10b98160` }
+            : data.status === 'error'
+                ? { boxShadow: `0 0 0 2px #ef444460` }
+                : {};
 
     return (
         <motion.div
             drag
             dragMomentum={false}
-            onDragEnd={(_, info: PanInfo) => {
-                onDragEnd(data.id, {
-                    x: data.position.x + (info.offset.x / scale),
-                    y: data.position.y + (info.offset.y / scale)
+            onDrag={(_, info: PanInfo) => {
+                onDrag(data.id, {
+                    x: data.position.x + (info.delta.x / scale),
+                    y: data.position.y + (info.delta.y / scale)
                 });
             }}
-            initial={{ x: data.position.x, y: data.position.y }}
+            style={{ x: data.position.x, y: data.position.y }}
             className="absolute touch-none cursor-grab active:cursor-grabbing group z-20"
             onPointerDown={(e) => e.stopPropagation()}
         >
+            {/* Running pulse ring */}
+            {data.status === 'running' && (
+                <motion.div
+                    className="absolute inset-0 rounded-xl"
+                    style={{ boxShadow: `0 0 0 4px ${data.color}40` }}
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+            )}
+
             {/* Node Body */}
-            <div className={`
-            relative w-[180px] bg-[#1a1a1a] rounded-xl border border-white/10 shadow-xl 
-            group-hover:border-white/20 transition-all overflow-hidden
-            ${data.status === 'running' ? 'ring-2 ring-purple-500/50' : ''}
-            ${data.status === 'success' ? 'ring-2 ring-emerald-500/50' : ''}
-            ${data.status === 'error' ? 'ring-2 ring-red-500/50' : ''}
-        `}>
-                {/* Header / Color Strip */}
-                <div className="h-1 w-full" style={{ backgroundColor: data.color }} />
+            <div
+                className="relative w-[180px] bg-[#18181b] rounded-xl border border-white/10 shadow-2xl group-hover:border-white/20 transition-all overflow-hidden"
+                style={glowStyle}
+            >
+                {/* Header / Color Strip with type badge */}
+                <div className="relative h-1 w-full" style={{ backgroundColor: data.color }}>
+                    <div
+                        className="absolute right-3 top-1 px-1.5 py-0.5 rounded-sm text-[7px] font-black tracking-widest"
+                        style={{ backgroundColor: `${data.color}30`, color: data.color }}
+                    >
+                        {NODE_TYPE_LABELS[data.type]}
+                    </div>
+                </div>
 
                 <div className="p-3">
                     <div className="flex items-start gap-3">
                         {/* Icon Box */}
                         <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: `${data.color}20`, color: data.color }}
+                            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                            style={{
+                                backgroundColor: `${data.color}${data.status === 'running' ? '35' : '20'}`,
+                                color: data.color,
+                                boxShadow: data.status === 'running' ? `0 0 12px ${data.color}50` : 'none'
+                            }}
                         >
-                            <Icon size={20} />
+                            {data.status === 'running' ? (
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                                >
+                                    <Icon size={20} />
+                                </motion.div>
+                            ) : (
+                                <Icon size={20} />
+                            )}
                         </div>
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-1">
                                 <h4 className="text-xs font-bold text-gray-200 truncate">{data.label}</h4>
-                                {data.status === 'success' && <CheckCircle2 size={12} className="text-emerald-500" />}
-                                {data.status === 'running' && <Loader2 size={12} className="text-purple-500 animate-spin" />}
+                                <div className="shrink-0">
+                                    {data.status === 'success' && <CheckCircle2 size={12} className="text-emerald-500" />}
+                                    {data.status === 'running' && <Loader2 size={12} className="text-purple-500 animate-spin" />}
+                                    {data.status === 'error' && <X size={12} className="text-red-500" />}
+                                </div>
                             </div>
                             <p className="text-[10px] text-gray-500 truncate mt-0.5">{data.subLabel}</p>
                         </div>
@@ -199,37 +445,81 @@ const Node = ({
 
                 {/* Connection Points */}
                 {data.type !== 'trigger' && (
-                    <div className="absolute top-1/2 -left-1.5 w-3 h-3 bg-gray-400 rounded-full border-2 border-[#1a1a1a]" />
+                    <div
+                        className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-3 h-3 rounded-full border-2 border-[#18181b] transition-all"
+                        style={{ backgroundColor: data.color, boxShadow: `0 0 6px ${data.color}80` }}
+                    />
                 )}
-                <div className="absolute top-1/2 -right-1.5 w-3 h-3 bg-gray-400 rounded-full border-2 border-[#1a1a1a] group-hover:scale-125 transition-transform cursor-crosshair" />
+                <div
+                    className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 rounded-full border-2 border-[#18181b] group-hover:scale-125 transition-all cursor-crosshair"
+                    style={{ backgroundColor: data.color, boxShadow: `0 0 6px ${data.color}80` }}
+                />
             </div>
         </motion.div>
     );
 };
 
-const Connection = ({ start, end, label, animated }: { start: Position; end: Position; label?: string; animated?: boolean }) => {
+const Connection = ({ start, end, label, animated, status, subFlow }: {
+    start: Position; end: Position; label?: string; animated?: boolean; status?: string; subFlow?: boolean;
+}) => {
     const cp1 = { x: start.x + Math.abs(end.x - start.x) / 2, y: start.y };
     const cp2 = { x: end.x - Math.abs(end.x - start.x) / 2, y: end.y };
     const path = `M ${start.x} ${start.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${end.x} ${end.y}`;
 
+    // Sub-flow (tool connection): thin dashed gray line, simple
+    if (subFlow) {
+        const isSubActive = animated;
+        return (
+            <g>
+                <path d={path} fill="none" stroke="#2a2a2a" strokeWidth="1.5" strokeDasharray="5 4" />
+                {isSubActive && (
+                    <motion.path
+                        d={path}
+                        fill="none"
+                        stroke="#444"
+                        strokeWidth="1.5"
+                        strokeDasharray="5 4"
+                        initial={{ pathLength: 0, opacity: 0.6 }}
+                        animate={{ pathLength: 1, opacity: 0 }}
+                        transition={{ duration: 2, ease: "linear", repeat: Infinity }}
+                    />
+                )}
+                {label && (
+                    <g transform={`translate(${(start.x + end.x) / 2}, ${(start.y + end.y) / 2})`}>
+                        <rect x="-14" y="-8" width="28" height="16" rx="3" fill="#111" stroke="#2a2a2a" />
+                        <text x="0" y="3.5" textAnchor="middle" fill="#555" fontSize="8" fontWeight="600">{label}</text>
+                    </g>
+                )}
+            </g>
+        );
+    }
+
+    const baseColor = status === 'error' ? '#ef444440' : status === 'success' ? '#10b98130' : '#3a3a3a';
+    const activeColor = status === 'success' ? '#10b981' : '#a855f7';
+
     return (
         <g>
-            <path d={path} fill="none" stroke="#4a4a4a" strokeWidth="2" />
-            {animated && (
-                <motion.path
-                    d={path}
-                    fill="none"
-                    stroke="#a855f7"
-                    strokeWidth="2"
-                    initial={{ pathLength: 0, opacity: 1 }}
-                    animate={{ pathLength: 1, opacity: 0 }}
-                    transition={{ duration: 1, ease: "easeInOut", repeat: Infinity }}
-                />
+            <path d={path} fill="none" stroke={baseColor} strokeWidth="2" strokeDasharray={status === 'error' ? '6 4' : 'none'} />
+            {(animated || status === 'success') && (
+                <>
+                    <motion.path
+                        d={path} fill="none" stroke={activeColor} strokeWidth="6" opacity={0.2}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1, opacity: [0, 0.3, 0] }}
+                        transition={{ duration: 1.5, ease: "linear", repeat: Infinity }}
+                    />
+                    <motion.path
+                        d={path} fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round"
+                        initial={{ pathLength: 0, opacity: 1 }}
+                        animate={{ pathLength: 1, opacity: 0 }}
+                        transition={{ duration: 1.5, ease: "linear", repeat: Infinity }}
+                    />
+                </>
             )}
             {label && (
                 <g transform={`translate(${(start.x + end.x) / 2}, ${(start.y + end.y) / 2})`}>
-                    <rect x="-20" y="-10" width="40" height="20" rx="4" fill="#1a1a1a" stroke="#333" />
-                    <text x="0" y="4" textAnchor="middle" fill="#888" fontSize="9" fontWeight="500">{label}</text>
+                    <rect x="-22" y="-10" width="44" height="20" rx="4" fill="#18181b" stroke="#2a2a2a" />
+                    <text x="0" y="4" textAnchor="middle" fill="#06b6d4" fontSize="9" fontWeight="700">{label}</text>
                 </g>
             )}
         </g>
@@ -237,41 +527,60 @@ const Connection = ({ start, end, label, animated }: { start: Position; end: Pos
 };
 
 const ResultCard = ({ data, onClose }: { data: AIResponse['data'], onClose: () => void }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        const text = JSON.stringify(data, null, 2);
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleExternalLink = () => {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(data.name)}+name+meaning+and+origin`, '_blank');
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+            className="w-full max-w-[400px] max-h-[calc(100%-2rem)] flex flex-col bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] overflow-hidden"
         >
-            {/* Header */}
-            <div className="h-32 bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6 relative">
-                <button onClick={onClose} className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors">
+            {/* Header — fixed, never scrolls */}
+            <div className="h-24 bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-blue-900/40 px-5 py-4 relative shrink-0">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+                <button onClick={onClose} className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-10 p-1 hover:bg-white/10 rounded-full">
                     <X size={16} />
                 </button>
-                <div className="flex items-end h-full">
+                <div className="flex items-end h-full relative z-10">
                     <div>
-                        <h2 className="text-3xl font-bold text-white mb-1">{data.name}</h2>
-                        <div className="flex items-center gap-2 text-purple-200/70 text-sm">
-                            <Globe2 size={14} />
-                            <span>{data.origin}</span>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-2xl font-black text-white">{data.name}</h2>
+                            <div className="px-2 py-0.5 rounded bg-white/10 border border-white/20 text-[9px] text-white/70 font-bold uppercase tracking-wider backdrop-blur-md">
+                                Profile
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-purple-200/70 text-xs">
+                            <Globe2 size={12} />
+                            <span className="font-medium">{data.origin}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Body */}
-            <div className="p-6 space-y-5">
+            {/* Body — scrollable */}
+            <div className="overflow-y-auto flex-1 p-4 space-y-4 scrollbar-none">
                 <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Meaning</h3>
-                    <p className="text-gray-200 text-sm leading-relaxed font-medium">"{data.meaning}"</p>
+                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-1.5">Meaning & Ethos</h3>
+                    <p className="text-gray-200 text-xs leading-relaxed font-medium">"{data.meaning}"</p>
                 </div>
 
                 <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Personality Traits</h3>
-                    <div className="flex flex-wrap gap-2">
+                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2">AI Cluster Profiling</h3>
+                    <div className="flex flex-wrap gap-1.5">
                         {data.traits.map((trait, i) => (
-                            <span key={i} className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-300">
+                            <span key={i} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-gray-300 font-medium">
                                 {trait}
                             </span>
                         ))}
@@ -279,16 +588,43 @@ const ResultCard = ({ data, onClose }: { data: AIResponse['data'], onClose: () =
                 </div>
 
                 <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Cultural Significance</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">{data.cultural_significance}</p>
+                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-1.5">Metadata Analysis</h3>
+                    <p className="text-[11px] text-gray-400 leading-relaxed italic">{data.cultural_significance}</p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-                    <div className="flex gap-2">
-                        <Sparkles size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                        <p className="text-xs text-amber-200/90 italic">"{data.inspiration}"</p>
+                <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                    <div className="flex gap-2.5">
+                        <motion.div
+                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="shrink-0"
+                        >
+                            <Sparkles size={14} className="text-amber-500" />
+                        </motion.div>
+                        <p className="text-[11px] text-amber-200/90 italic leading-relaxed">"{data.inspiration}"</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Footer Actions — fixed, never scrolls */}
+            <div className="flex items-center gap-2 p-4 pt-0 shrink-0">
+                <button
+                    onClick={handleCopy}
+                    className="flex-1 h-9 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold text-gray-300 transition-all"
+                >
+                    {copied ? (
+                        <><CheckCircle2 size={13} className="text-emerald-400" /> Copied!</>
+                    ) : (
+                        <><Copy size={13} /> Copy JSON</>
+                    )}
+                </button>
+                <button
+                    onClick={handleExternalLink}
+                    title="Explore Origin"
+                    className="h-9 px-3 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-gray-300 transition-all"
+                >
+                    <ExternalLink size={13} />
+                </button>
             </div>
         </motion.div>
     );
@@ -298,15 +634,23 @@ export default function AutomationDemo() {
     const [nodes, setNodes] = useState(INITIAL_NODES);
     const [edges] = useState(INITIAL_EDGES);
     const [isExecuting, setIsExecuting] = useState(false);
-    const [executionStep, setExecutionStep] = useState(0); // 0: idle, 1: validation, 2: AI, 3: DB, 4: Response
+    const [executionStep, setExecutionStep] = useState(0);
     const [zoom, setZoom] = useState(0.65);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const logsContainerRef = useRef<HTMLDivElement>(null);
 
     const [inputName, setInputName] = useState("");
     const [resultData, setResultData] = useState<AIResponse['data'] | null>(null);
 
-    const getNodePos = (id: string, type: 'input' | 'output' = 'output') => {
+    const [stats, setStats] = useState({
+        executions: 0,
+        latency: 0,
+        successRate: 100,
+        totalNodes: INITIAL_NODES.length
+    });
+
+    const getNodePos = useCallback((id: string, type: 'input' | 'output' = 'output') => {
         const node = nodes.find(n => n.id === id);
         if (!node) return { x: 0, y: 0 };
         const width = 180;
@@ -314,12 +658,25 @@ export default function AutomationDemo() {
         return type === 'input'
             ? { x: node.position.x, y: node.position.y + height / 2 }
             : { x: node.position.x + width, y: node.position.y + height / 2 };
-    };
+    }, [nodes]);
 
     const addLog = (message: string, type: LogEntry['type'] = 'info') => {
         const now = new Date();
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        setLogs(prev => [...prev, { id: Math.random().toString(36), time: timeStr, message, type }]);
+        setLogs(prev => {
+            const newLogs = [...prev, { id: Math.random().toString(36).substr(2, 9), time: timeStr, message, type }];
+            return newLogs.slice(-50);
+        });
+    };
+
+    // Reset Workflow State
+    const handleReset = () => {
+        setIsExecuting(false);
+        setResultData(null);
+        setExecutionStep(0);
+        setNodes(INITIAL_NODES.map(n => ({ ...n, status: 'idle' })));
+        setLogs([]);
+        addLog("Workflow state reset", "info");
     };
 
     // Execution Logic
@@ -327,68 +684,103 @@ export default function AutomationDemo() {
         const nameToProcess = inputName.trim();
         if (!nameToProcess) return;
 
+        const startTime = Date.now();
         setIsExecuting(true);
         setResultData(null);
         setLogs([]);
         setExecutionStep(0);
-        setNodes(INITIAL_NODES.map(n => ({ ...n, status: 'idle' })));
+        setNodes(prev => prev.map(n => ({ ...n, status: 'idle' })));
 
         try {
-            // --- Step 1: Webhook & Validation ---
-            addLog("Connecting to automation engine...", "info");
+            // --- Step 1: Webhook Trigger ---
+            addLog(`[webhook] Incoming POST /webhook/name — payload: "${nameToProcess}"`, "info");
             setExecutionStep(1);
             setNodes(prev => prev.map(n => n.id === 'webhook' ? { ...n, status: 'success' } : n));
+            await new Promise(r => setTimeout(r, 500));
 
-            await new Promise(r => setTimeout(r, 600)); // Visual delay
-            setNodes(prev => prev.map(n => n.id === 'validation' ? { ...n, status: 'running' } : n));
-
-            if (nameToProcess.length > 30) {
-                throw new Error("Name is too long (max 30 chars)");
-            }
-            addLog("Input validated successfully", "success");
-            setNodes(prev => prev.map(n => n.id === 'validation' ? { ...n, status: 'success' } : n));
-
-            // --- Step 2: AI Processing (Real Fetch) ---
+            // --- Step 2: Validation + Auth ---
             setExecutionStep(2);
-            setNodes(prev => prev.map(n => n.id === 'ai-engine' ? { ...n, status: 'running' } : n));
-            addLog("AI analyzing linguistic origins...", "info");
+            addLog(`[validator] Running schema check & sanitization...`, "info");
+            setNodes(prev => prev.map(n =>
+                ['validation', 'auth-svc'].includes(n.id) ? { ...n, status: 'running' } : n
+            ));
+            await new Promise(r => setTimeout(r, 600));
+            if (nameToProcess.length > 30) throw new Error("Payload size limit exceeded (max 30 chars)");
+            addLog(`[validator] ✓ Input clean — auth token verified`, "success");
+            setNodes(prev => prev.map(n =>
+                ['validation', 'auth-svc'].includes(n.id) ? { ...n, status: 'success' } : n
+            ));
+
+            // --- Step 3: AI Engine + LLM + Vector Search ---
+            setExecutionStep(3);
+            addLog(`[ai-engine] Invoking Claude 3.5 Sonnet via Anthropic API...`, "info");
+            setNodes(prev => prev.map(n =>
+                ['ai-engine', 'llm-model', 'vector-db'].includes(n.id) ? { ...n, status: 'running' } : n
+            ));
 
             const response = await fetch("https://n8n.pipisara.me/webhook/ai-name-intelligence", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: nameToProcess })
             });
+            if (!response.ok) throw new Error(`Upstream Error: ${response.status}`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `Server error: ${response.status}`);
-            }
+            addLog(`[llm-model] Token stream complete — embedding generated`, "info");
+            addLog(`[vector-db] Semantic similarity search returned top-5 clusters`, "info");
+            setNodes(prev => prev.map(n =>
+                ['ai-engine', 'llm-model', 'vector-db'].includes(n.id) ? { ...n, status: 'success' } : n
+            ));
 
-            addLog("Generating personality profile...", "info");
-            setNodes(prev => prev.map(n => n.id === 'ai-engine' ? { ...n, status: 'success' } : n));
-
-            // --- Step 3: DB & Formatting ---
-            setExecutionStep(3);
-            setNodes(prev => prev.map(n => n.id === 'database' ? { ...n, status: 'running' } : n));
-            await new Promise(r => setTimeout(r, 800)); // Visual delay for effect
-            setNodes(prev => prev.map(n => n.id === 'database' ? { ...n, status: 'success' } : n));
-
-            // --- Step 4: Final Response ---
+            // --- Step 4: Intent Router ---
             setExecutionStep(4);
+            addLog(`[router] Confidence score > 0.85 → routing to primary branch`, "info");
+            setNodes(prev => prev.map(n => n.id === 'router' ? { ...n, status: 'running' } : n));
+            await new Promise(r => setTimeout(r, 400));
+            setNodes(prev => prev.map(n =>
+                ['router', 'cache-layer', 'enrichment'].includes(n.id) ? { ...n, status: 'success' } : n
+            ));
+            addLog(`[cache-layer] Redis MISS — fetching from source`, "info");
+            addLog(`[enrichment] Cultural etymology records merged`, "success");
+
+            // --- Step 5: PostgreSQL Write + Slack ---
+            setExecutionStep(5);
+            addLog(`[database] Writing enriched record to PostgreSQL...`, "info");
+            setNodes(prev => prev.map(n =>
+                ['database', 'slack-out'].includes(n.id) ? { ...n, status: 'running' } : n
+            ));
+            await new Promise(r => setTimeout(r, 700));
+            setNodes(prev => prev.map(n =>
+                ['database', 'slack-out', 'email-out'].includes(n.id) ? { ...n, status: 'success' } : n
+            ));
+            addLog(`[slack-out] Notification dispatched to #ai-alerts`, "success");
+
+            // --- Step 6: Final Response ---
+            setExecutionStep(6);
             setNodes(prev => prev.map(n => n.id === 'response' ? { ...n, status: 'success' } : n));
 
             const result: AIResponse = await response.json();
-            if (result.status === 'error') {
-                throw new Error(result.message || "Unknown error from AI engine");
-            }
+            if (result.status === 'error') throw new Error(result.message || "Engine Error");
 
+            const endTime = Date.now();
+            const latency = endTime - startTime;
             setResultData(result.data);
-            addLog("Workflow completed successfully", "success");
-            addLog(`Execution ID: ${result.execution_id}`, "info");
+            setStats(prev => ({
+                executions: prev.executions + 1,
+                latency: Math.round((prev.latency * prev.executions + latency) / (prev.executions + 1)),
+                successRate: Math.round((prev.executions * prev.successRate + 100) / (prev.executions + 1)),
+                totalNodes: INITIAL_NODES.length
+            }));
+            addLog(`[response] Pipeline complete — ${latency}ms total`, "success");
+            addLog(`[exec] ID: ${result.execution_id.split('-')[0]}...`, "info");
 
         } catch (err: any) {
-            addLog(`Error: ${err.message}`, "error");
+            addLog(`[error] Failure: ${err.message}`, "error");
             setNodes(prev => prev.map(n => n.status === 'running' ? { ...n, status: 'error' } : n));
+            setStats(prev => ({
+                ...prev,
+                executions: prev.executions + 1,
+                successRate: Math.round((prev.executions * prev.successRate + 0) / (prev.executions + 1))
+            }));
         } finally {
             setIsExecuting(false);
         }
@@ -401,29 +793,26 @@ export default function AutomationDemo() {
         }
     }, [logs]);
 
-    // Dynamic status logic for visual edges
-    const getSimulatedNodeStatus = (node: NodeData) => {
-        // In this version we rely on declarative state updates in handleExecute, 
-        // but we can fallback or augment here if needed.
-        return node.status;
+    const updateNodePosition = (id: string, pos: Position) => {
+        setNodes(prev => prev.map(n => n.id === id ? { ...n, position: pos } : n));
     };
 
-    // Helper for nodes array (so edges know what to track)
-    const renderedNodes = nodes;
-
     return (
-        <div className="w-full h-full bg-[#0F0F0F] relative overflow-hidden flex flex-col font-sans select-none text-foreground">
+        <div className="w-full h-full bg-[#09090b] relative overflow-hidden flex flex-col font-sans select-none text-foreground">
 
             {/* Top Bar */}
-            <div className="h-16 border-b border-white/5 bg-[#141414] px-4 flex items-center justify-between z-10 shrink-0">
-                <div className="flex items-center gap-4">
-                    <div className="w-9 h-9 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
-                        <BrainCircuit size={20} />
+            <div className="h-16 border-b border-white/5 bg-[#0f0f13] px-6 flex items-center justify-between z-40 shrink-0">
+                <div className="flex items-center gap-5">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative">
+                            <BrainCircuit size={22} />
+                        </div>
                     </div>
                     <div>
-                        <h2 className="text-sm font-bold text-gray-200">AI Name Intelligence</h2>
-                        <p className="text-[10px] text-gray-500 max-w-[250px] leading-tight mt-0.5">
-                            Experience live AI-powered automation. Your input is processed in real-time.
+                        <h2 className="text-sm font-black text-white tracking-tight">AI Intelligence Pipeline v2.4</h2>
+                        <p className="text-[10px] text-gray-500 max-w-[280px] leading-tight mt-0.5 font-medium uppercase tracking-wider">
+                            Real-time autonomous automation workflow.
                         </p>
                     </div>
                 </div>
@@ -434,13 +823,13 @@ export default function AutomationDemo() {
                             type="text"
                             value={inputName}
                             onChange={(e) => setInputName(e.target.value)}
-                            placeholder="Enter a name..."
+                            placeholder="Enter a name to analyze..."
                             maxLength={30}
                             disabled={isExecuting}
-                            className="h-9 w-48 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 transition-all disabled:opacity-50"
+                            className="h-10 w-64 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 transition-all disabled:opacity-50 ring-0 focus:ring-1 focus:ring-purple-500/20 shadow-inner"
                             onKeyDown={(e) => e.key === 'Enter' && handleExecute()}
                         />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 pointer-events-none group-focus-within:opacity-0">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-700 pointer-events-none group-focus-within:text-gray-500 transition-colors">
                             {inputName.length}/30
                         </div>
                     </div>
@@ -448,116 +837,200 @@ export default function AutomationDemo() {
                     <button
                         onClick={handleExecute}
                         disabled={isExecuting || !inputName.trim()}
-                        className={`h-9 px-4 rounded-lg flex items-center gap-2 text-xs font-bold transition-all
+                        className={`h-10 px-6 rounded-xl flex items-center gap-2 text-xs font-black transition-all
                         ${isExecuting
-                                ? 'bg-purple-500/20 text-purple-300 cursor-not-allowed border border-purple-500/30'
+                                ? 'bg-purple-500/10 text-purple-400 cursor-not-allowed border border-purple-500/20'
                                 : !inputName.trim()
-                                    ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                                    : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/20 hover:scale-[1.02]'
+                                    ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
+                                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_8px_24px_-4px_rgba(168,85,247,0.4)] hover:scale-[1.03] active:scale-[0.98]'
                             }
                     `}
                     >
                         {isExecuting ? (
-                            <><Loader2 size={12} className="animate-spin" /> Processing...</>
+                            <><Loader2 size={14} className="animate-spin" /> EXECUTING...</>
                         ) : (
-                            <><Play size={12} fill="currentColor" /> Execute Workflow</>
+                            <><Play size={14} fill="currentColor" /> RUN PIPELINE</>
                         )}
                     </button>
 
-                    <div className="w-px h-6 bg-white/10 mx-1" />
+                    <div className="w-px h-6 bg-white/10 mx-2" />
 
-                    <button className="h-8 w-8 rounded-md bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center">
-                        <Settings size={14} />
+                    <button
+                        onClick={handleReset}
+                        title="Reset Workflow"
+                        className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center"
+                    >
+                        <RotateCcw size={16} />
+                    </button>
+
+                    <button className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center">
+                        <Settings size={16} />
                     </button>
                 </div>
             </div>
 
+            {/* Execution Progress Bar */}
+            <div className="h-0.5 bg-white/5 shrink-0 relative overflow-hidden">
+                <motion.div
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 to-indigo-500"
+                    style={{ boxShadow: '0 0 8px rgba(168,85,247,0.7)' }}
+                    animate={{ width: isExecuting ? `${(executionStep / 6) * 100}%` : executionStep >= 6 ? '100%' : '0%' }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+            </div>
+
             {/* Editor Area */}
-            <div className="relative flex-1 bg-[#0F0F0F] overflow-hidden cursor-grab active:cursor-grabbing">
-                {/* Grid */}
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
+            <div className="relative flex-1 bg-[#09090b] overflow-hidden">
+                {/* Background Grid - Stays fixed or moves depending on approach. 
+                    Let's make it follow the pan. */}
+                <div
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                        backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
-                        backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
-                        backgroundPosition: '10px 10px'
+                        backgroundImage: `radial-gradient(#ffffff0a 1px, transparent 1px)`,
+                        backgroundSize: `${40 * zoom}px ${40 * zoom}px`,
+                        backgroundPosition: `${pan.x}px ${pan.y}px`,
                     }}
                 />
 
-                {/* Canvas */}
+                {/* Canvas Panning Wrapper */}
                 <motion.div
-                    className="absolute inset-0 origin-top-left"
-                    animate={{ scale: zoom }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                    style={{ width: '100%', height: '100%' }}
+                    drag
+                    dragMomentum={false}
+                    className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
+                    onDrag={(_, info) => {
+                        setPan(prev => ({
+                            x: prev.x + info.delta.x,
+                            y: prev.y + info.delta.y
+                        }));
+                    }}
                 >
-                    {/* Edges */}
-                    <svg className="absolute inset-0 pointer-events-none z-10" style={{ width: '300%', height: '300%' }}>
-                        {edges.map(edge => {
-                            const start = getNodePos(edge.source, 'output');
-                            const end = getNodePos(edge.target, 'input');
-                            // Animate edge if source is running or success. 
-                            const sourceNode = nodes.find(n => n.id === edge.source);
-                            const isAnimated = sourceNode?.status === 'running' || sourceNode?.status === 'success';
+                    {/* Zoomable Content */}
+                    <motion.div
+                        className="absolute inset-0 origin-center"
+                        animate={{ scale: zoom, x: pan.x, y: pan.y }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                        style={{ width: '100%', height: '100%' }}
+                    >
+                        {/* Edges */}
+                        <svg className="absolute inset-0 pointer-events-none z-10" style={{ width: '5000px', height: '5000px', left: '-2000px', top: '-1500px' }}>
+                            <g transform="translate(2000, 1500)">
+                                {edges.map(edge => {
+                                    const start = getNodePos(edge.source, 'output');
+                                    const end = getNodePos(edge.target, 'input');
+                                    const sourceNode = nodes.find(n => n.id === edge.source);
+                                    const targetNode = nodes.find(n => n.id === edge.target);
 
-                            return (
-                                <Connection
-                                    key={edge.id}
-                                    start={start}
-                                    end={end}
-                                    label={edge.label}
-                                    animated={isAnimated}
+                                    const isAnimated = sourceNode?.status === 'running' || sourceNode?.status === 'success';
+                                    const status = targetNode?.status === 'success' ? 'success' : sourceNode?.status === 'error' ? 'error' : 'idle';
+
+                                    return (
+                                        <Connection
+                                            key={edge.id}
+                                            start={start}
+                                            end={end}
+                                            label={edge.label}
+                                            animated={isAnimated}
+                                            status={status}
+                                            subFlow={edge.subFlow}
+                                        />
+                                    );
+                                })}
+                            </g>
+                        </svg>
+
+                        {/* Nodes Container */}
+                        <div className="absolute inset-0 z-20">
+                            {nodes.map(node => (
+                                <Node
+                                    key={node.id}
+                                    data={node}
+                                    scale={zoom}
+                                    onDrag={updateNodePosition}
                                 />
-                            );
-                        })}
-                    </svg>
-
-                    {/* Nodes */}
-                    {nodes.map(node => (
-                        <Node
-                            key={node.id}
-                            data={node}
-                            scale={zoom}
-                            onDragEnd={(id, pos) => setNodes(prev => prev.map(n => n.id === id ? { ...n, position: pos } : n))}
-                        />
-                    ))}
+                            ))}
+                        </div>
+                    </motion.div>
                 </motion.div>
 
-                {/* Logic Console Window */}
-                <div className="absolute bottom-4 left-4 w-60 z-30 flex flex-col gap-2 pointer-events-none">
-                    <div className="bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl overflow-hidden flex flex-col pointer-events-auto">
-                        <div className="h-7 px-2.5 border-b border-white/10 flex items-center justify-between bg-white/5">
-                            <div className="flex items-center gap-2 text-[10px] font-semibold text-gray-300">
-                                <Terminal size={10} className="text-gray-500" />
-                                <span>Live Execution Log</span>
+                {/* Stats Overlay Panel (New) */}
+                <div className="absolute top-6 right-6 z-40 flex flex-col gap-3 pointer-events-none">
+                    <div className="bg-[#18181b]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl p-4 w-56 flex flex-col gap-4 pointer-events-auto">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Instance Stats</span>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                                <span className="text-[9px] text-emerald-500 font-bold uppercase">Active</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[9px] text-gray-500 font-medium">Executions</span>
+                                <span className="text-sm font-black text-white">{stats.executions}</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5 text-right">
+                                <span className="text-[9px] text-gray-500 font-medium">Avg Latency</span>
+                                <span className="text-sm font-black text-white">{stats.latency}ms</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[9px] text-gray-500 font-medium">Success Rate</span>
+                                <span className="text-sm font-black text-emerald-400">{stats.successRate}%</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5 text-right">
+                                <span className="text-[9px] text-gray-500 font-medium">Total Nodes</span>
+                                <span className="text-sm font-black text-purple-400">{stats.totalNodes}</span>
+                            </div>
+                        </div>
+
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                                animate={{ width: `${stats.successRate}%` }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Live Console Overlay (Fixed position) */}
+                <div className="absolute bottom-6 left-6 w-72 z-40 flex flex-col gap-3 pointer-events-none">
+                    <div className="bg-[#18181b]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto">
+                        <div className="h-9 px-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                            <div className="flex items-center gap-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                <Terminal size={12} className="text-purple-400" />
+                                <span>Execution Stream</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[9px] text-gray-500 font-mono">LIVE</span>
                             </div>
                         </div>
 
                         <div
                             ref={logsContainerRef}
-                            className="h-32 overflow-y-auto p-2 font-mono text-[9px] space-y-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+                            className="h-40 overflow-y-auto p-4 font-mono text-[10px] space-y-2 scrollbar-none"
                         >
                             {logs.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-gray-600 space-y-1">
-                                    <Clock size={16} className="opacity-20" />
-                                    <span className="opacity-40">Ready...</span>
+                                <div className="h-full flex flex-col items-center justify-center text-gray-700 space-y-2 opacity-50">
+                                    <Clock size={20} className="mb-1" />
+                                    <span>Awaiting triggers...</span>
                                 </div>
                             ) : (
-                                <div className="flex flex-col gap-1">
+                                <div className="flex flex-col gap-2">
                                     {logs.map(log => (
                                         <motion.div
                                             key={log.id}
-                                            initial={{ opacity: 0, x: -5 }}
+                                            initial={{ opacity: 0, x: -8 }}
                                             animate={{ opacity: 1, x: 0 }}
-                                            className="flex gap-1.5 items-start"
+                                            className="flex gap-2.5 items-start"
                                         >
-                                            <span className="text-gray-600 shrink-0 select-none opacity-70">[{log.time}]</span>
+                                            <span className="text-gray-600 shrink-0 select-none opacity-50">[{log.time}]</span>
                                             <span className={`
-                                              break-words flex-1
-                                              ${log.type === 'error' ? 'text-red-400' : ''}
-                                              ${log.type === 'success' ? 'text-emerald-400' : ''}
-                                              ${log.type === 'warning' ? 'text-amber-400' : ''}
-                                              ${log.type === 'info' ? 'text-gray-300' : ''}
-                                          `}>
+                                                break-words flex-1 leading-relaxed
+                                                ${log.type === 'error' ? 'text-red-400 bg-red-400/5 px-1 rounded' : ''}
+                                                ${log.type === 'success' ? 'text-emerald-400' : ''}
+                                                ${log.type === 'warning' ? 'text-amber-400' : ''}
+                                                ${log.type === 'info' ? 'text-gray-400' : ''}
+                                            `}>
                                                 {log.type === 'success' && '✓ '}
                                                 {log.message}
                                             </span>
@@ -572,26 +1045,46 @@ export default function AutomationDemo() {
                 {/* Results Overlay */}
                 <AnimatePresence>
                     {resultData && (
-                        <div className="absolute inset-0 z-40 bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                            <div className="pointer-events-auto">
-                                <ResultCard data={resultData} onClose={() => setResultData(null)} />
-                            </div>
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                        >
+                            <ResultCard data={resultData} onClose={() => setResultData(null)} />
+                        </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* Floating Controls */}
-                <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-30">
-                    <div className="p-1.5 bg-[#1a1a1a] border border-white/10 rounded-lg flex flex-col gap-1 shadow-xl">
-                        <button onClick={() => setZoom(z => Math.min(z + 0.1, 1.5))} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white">
-                            <ZoomIn size={14} />
+                {/* Canvas Controls */}
+                <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-40 items-center">
+                    {/* Zoom Level Pill */}
+                    <div className="px-3 py-1 bg-[#18181b]/95 backdrop-blur-xl border border-white/10 rounded-full shadow-lg">
+                        <span className="text-[10px] font-black text-gray-400 tabular-nums">{Math.round(zoom * 100)}%</span>
+                    </div>
+
+                    <div className="p-1.5 bg-[#18181b]/95 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col gap-1 shadow-2xl">
+                        <button
+                            onClick={() => setZoom(z => Math.min(+(z + 0.1).toFixed(1), 1.5))}
+                            className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white active:scale-95"
+                            title="Zoom In"
+                        >
+                            <ZoomIn size={18} />
                         </button>
-                        <button onClick={() => setZoom(z => Math.max(z - 0.1, 0.3))} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white">
-                            <ZoomOut size={14} />
+                        <button
+                            onClick={() => setZoom(z => Math.max(+(z - 0.1).toFixed(1), 0.3))}
+                            className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white active:scale-95"
+                            title="Zoom Out"
+                        >
+                            <ZoomOut size={18} />
                         </button>
-                        <div className="h-px bg-white/10 my-0.5" />
-                        <button onClick={() => setZoom(0.65)} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white">
-                            <Maximize size={14} />
+                        <div className="h-px bg-white/10 mx-2 my-1" />
+                        <button
+                            onClick={() => { setZoom(0.65); setPan({ x: 0, y: 0 }); }}
+                            className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white active:scale-95"
+                            title="Recenter Canvas"
+                        >
+                            <Maximize size={18} />
                         </button>
                     </div>
                 </div>
