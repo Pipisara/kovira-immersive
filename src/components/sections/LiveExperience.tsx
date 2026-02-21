@@ -49,7 +49,7 @@ function CategoryItem({
         >
             <button
                 onClick={onClick}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 group relative ${isActive
+                className={`w-full flex items-center gap-2 md:gap-3 py-1.5 px-2 md:p-3 rounded-xl transition-all duration-300 group relative ${isActive
                     ? `${category.accentBg} shadow-sm shadow-primary/5`
                     : "hover:bg-white/5"
                     }`}
@@ -62,15 +62,15 @@ function CategoryItem({
                     />
                 )}
 
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${isActive ? "bg-background/50" : "bg-white/5 group-hover:bg-white/10"}`}>
-                    <Icon size={18} className={isActive ? category.accentColor : "text-muted-foreground group-hover:text-foreground"} />
+                <div className={`w-7 h-7 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${isActive ? "bg-background/50" : "bg-white/5 group-hover:bg-white/10"}`}>
+                    <Icon size={14} className={isActive ? category.accentColor : "text-muted-foreground group-hover:text-foreground"} />
                 </div>
 
                 <div className="flex-1 text-left min-w-0">
-                    <h4 className={`text-sm font-bold truncate transition-colors ${isActive ? "text-foreground" : "text-foreground/70 group-hover:text-foreground"}`}>
+                    <h4 className={`text-xs md:text-sm font-bold truncate transition-colors ${isActive ? "text-foreground" : "text-foreground/70 group-hover:text-foreground"}`}>
                         {category.title}
                     </h4>
-                    <p className={`text-[10px] truncate transition-colors ${isActive ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
+                    <p className={`text-[10px] truncate transition-colors hidden md:block ${isActive ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
                         {category.subtitle}
                     </p>
                 </div>
@@ -245,21 +245,21 @@ export default function LiveExperience() {
             ref={sectionRef}
             className="relative bg-background z-20"
         >
-            <div ref={wrapperRef} className="min-h-screen flex flex-col pt-28 pb-8 overflow-hidden">
+            <div ref={wrapperRef} className="min-h-screen flex flex-col pt-20 md:pt-28 pb-8 lg:overflow-hidden">
                 {/* Ambient background effects */}
                 <div className="absolute inset-0 pointer-events-none opacity-30">
                     <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
                     <div className="absolute bottom-[10%] right-[5%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[150px]" />
                 </div>
 
-                <div className="max-w-[1400px] w-full mx-auto relative z-10 px-4 md:px-6 flex flex-col h-full max-h-screen">
+                <div className="max-w-[1400px] w-full mx-auto relative z-10 px-4 md:px-6 flex flex-col lg:h-full lg:max-h-screen">
 
                     {/* ── Section header ──────────────────────────────────── */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={isInView ? { opacity: 1, y: 0 } : {}}
                         transition={{ duration: 0.7 }}
-                        className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4 shrink-0"
+                        className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-3 md:mb-4 shrink-0"
                     >
                         <div className="max-w-2xl">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-2">
@@ -288,17 +288,17 @@ export default function LiveExperience() {
                     </motion.div>
 
                     {/* ── Main Layout ────────────────────────────────────── */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start flex-1 min-h-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-3 md:gap-6 items-start flex-1 min-h-0">
 
                         {/* Navigation Sidebar */}
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={isInView ? { opacity: 1, x: 0 } : {}}
                             transition={{ duration: 0.7, delay: 0.2 }}
-                            className="flex flex-col gap-4 sticky top-0"
+                            className="flex flex-col gap-4 lg:sticky lg:top-0 order-1"
                         >
                             {/* Categories List */}
-                            <div className="glass rounded-[2rem] p-3 border-white/5 flex flex-col gap-1 shadow-2xl overflow-y-auto max-h-[50vh] scrollbar-hide">
+                            <div className="glass rounded-[2rem] p-2 md:p-3 border-white/5 flex flex-col gap-1 shadow-2xl overflow-y-auto max-h-none lg:max-h-[50vh] scrollbar-hide">
                                 <div className="px-3 py-1 mb-1 flex items-center justify-between">
                                     <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Modules</span>
                                     <div className="flex gap-1">
@@ -346,8 +346,75 @@ export default function LiveExperience() {
                                     );
                                 })}
                             </div>
+                        </motion.div>
 
-                            {/* Info Card */}
+                        {/* Viewport Area - Reordered on mobile to follow Categories */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                            transition={{ duration: 0.7, delay: 0.3 }}
+                            className="relative group h-[50vh] lg:h-[58vh] order-2 lg:row-span-2"
+                        >
+                            {/* Decorative elements */}
+                            <div className="absolute -inset-[1px] bg-gradient-to-br from-white/10 via-transparent to-primary/20 rounded-[2rem] -z-10 opacity-50 transition-opacity group-hover:opacity-100" />
+
+                            <div className="h-full relative rounded-[2rem] border border-white/10 shadow-3xl overflow-hidden bg-background">
+                                <AnimatePresence mode="wait">
+                                    {!isTransitioning && (
+                                        <motion.div
+                                            key={`${activeCategory.id}-${activeDemo.id}`}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="h-full"
+                                        >
+                                            <DemoShell
+                                                category={activeCategory}
+                                                demo={activeDemo}
+                                                onMaximize={() => setIsMaximized(true)}
+                                                onMinimize={() => {
+                                                    sectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                                }}
+                                                onClose={() => {
+                                                    setActiveDemo(activeCategory.demos[0]);
+                                                }}
+                                            />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Loading Overlay */}
+                                <AnimatePresence>
+                                    {isTransitioning && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center"
+                                        >
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="relative">
+                                                    <div className="w-12 h-12 rounded-full border-2 border-primary/20" />
+                                                    <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] animate-pulse">
+                                                    Synchronizing Data...
+                                                </span>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </motion.div>
+
+                        {/* Info Card - Custom Lab - Reordered on mobile to follow Demo */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={isInView ? { opacity: 1, y: 0 } : {}}
+                            transition={{ duration: 0.7, delay: 0.4 }}
+                            className="order-3"
+                        >
                             <div className="glass rounded-[2rem] p-5 border-white/5 relative overflow-hidden group hover:border-primary/20 transition-colors shadow-xl">
                                 {/* Blueprint/Building Animation Background */}
                                 <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10 group-hover:opacity-20 transition-opacity">
@@ -432,66 +499,6 @@ export default function LiveExperience() {
                                         />
                                     </button>
                                 </div>
-                            </div>
-                        </motion.div>
-
-                        {/* Viewport Area */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                            transition={{ duration: 0.7, delay: 0.3 }}
-                            className="relative group h-[50vh] lg:h-[58vh]"
-                        >
-                            {/* Decorative elements */}
-                            <div className="absolute -inset-[1px] bg-gradient-to-br from-white/10 via-transparent to-primary/20 rounded-[2rem] -z-10 opacity-50 transition-opacity group-hover:opacity-100" />
-
-                            <div className="h-full relative rounded-[2rem] border border-white/10 shadow-3xl overflow-hidden bg-background">
-                                <AnimatePresence mode="wait">
-                                    {!isTransitioning && (
-                                        <motion.div
-                                            key={`${activeCategory.id}-${activeDemo.id}`}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="h-full"
-                                        >
-                                            <DemoShell
-                                                category={activeCategory}
-                                                demo={activeDemo}
-                                                onMaximize={() => setIsMaximized(true)}
-                                                onMinimize={() => {
-                                                    sectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-                                                }}
-                                                onClose={() => {
-                                                    setActiveDemo(activeCategory.demos[0]);
-                                                }}
-                                            />
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* Loading Overlay */}
-                                <AnimatePresence>
-                                    {isTransitioning && (
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center"
-                                        >
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="relative">
-                                                    <div className="w-12 h-12 rounded-full border-2 border-primary/20" />
-                                                    <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                                                </div>
-                                                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] animate-pulse">
-                                                    Synchronizing Data...
-                                                </span>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
                             </div>
                         </motion.div>
                     </div>
